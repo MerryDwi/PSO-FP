@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./icon.png">
+    <link rel="stylesheet" href="./src/css/style.css">
+    <title>X O Game</title>
+</head>
+
+<body>
+    <img id="game-logo" src="./src/images/logo.png" alt="Game Logo" style="display:block; margin: 30px auto 10px auto; width: 360px; max-width:90vw;">
+  
+    <div class="top-bar">
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+
+    <div id="score-board">
+        Player X: <span id="scoreX">0</span> | Player O: <span id="scoreO">0</span>
+    </div>
+
+    <div id="mode-selection">
+        <div class="segmented-toggle" id="game-mode-toggle">
+            <input type="radio" id="vsComputer" name="gameMode" value="playerVsComputer" checked>
+            <label for="vsComputer" class="segmented-option">
+                🎮&nbsp;Play vs Computer
+            </label>
+            <input type="radio" id="vsPlayer" name="gameMode" value="playerVsPlayer">
+            <label for="vsPlayer" class="segmented-option">
+                🧑‍🤝‍🧑&nbsp;Play vs Friend
+            </label>
+            <span class="segmented-slider"></span>
+        </div>
+    </div>
+
+    <div id="game-board" class="board"></div>
+    <div id="game-over-message"></div>
+    <div class="button-group">
+        <button id="restart-button" onclick="restartGame()" aria-label="Play Again"></button>
+        <button id="reset-score-button" onclick="resetScores()" aria-label="Reset Score"></button>
+    </div>
+    
+    <script type="module" src="./src/js/script.js"></script>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script>
+      window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+    <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const logo = document.getElementById('game-logo');
+    const lightLogo = './src/images/logo.png';
+    const darkLogo = './src/images/logo-dark.png';
+    const body = document.body;
+
+    function updateTheme() {
+    if (themeToggle.checked) {
+        logo.src = darkLogo;
+        body.classList.add('dark-mode');
+    } else {
+        logo.src = lightLogo;
+        body.classList.remove('dark-mode');
+    }
+    // Paksa refresh style cells
+    document.querySelectorAll('.cell').forEach(cell => {
+        // Ini akan memicu browser untuk re-apply CSS
+        cell.classList.remove('force-refresh');
+        void cell.offsetWidth; // trigger reflow
+        cell.classList.add('force-refresh');
+        setTimeout(() => cell.classList.remove('force-refresh'), 10);
+    });
+}
+
+    themeToggle.addEventListener('change', updateTheme);
+    window.addEventListener('DOMContentLoaded', updateTheme);
+</script>
+</body>
+
+</html>

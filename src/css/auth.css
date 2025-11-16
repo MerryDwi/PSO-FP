@@ -1,0 +1,119 @@
+/* Background */
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(to bottom, #b6dbff, #d7ecff);
+    overflow: hidden;
+}
+
+.background-layer {
+    position: fixed;
+    inset: 0;
+    background-image: url("../images/background-light.png");
+    background-size: cover;
+    background-position: center;
+    opacity: 0.35;
+    z-index: -1;
+}
+
+/* Container */
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 60px auto;
+    text-align: center;
+    padding: 20px;
+}
+
+.logo {
+    width: 330px;
+    max-width: 90%;
+    margin-bottom: 15px;
+}
+
+/* Form wrapper (NO FRAME) */
+.form-wrapper {
+    background: transparent;
+    backdrop-filter: none;
+    padding: 30px 25px;
+    border-radius: 20px;
+    animation: fadeIn .4s ease;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Text */
+h2 {
+    margin: 5px 0 0 0;
+    color: #1e2a55;
+}
+
+p {
+    color: #4a587d;
+}
+
+/* Inputs */
+input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 30px;       /* elips */
+    margin-top: 12px;
+    border: none;
+    background: rgba(255, 255, 255, .9); /* elips putih */
+    outline: none;
+}
+
+/* Remove the broken override */
+input[type="email"] {
+    background: rgba(255, 255, 255, .9);
+    border-radius: 30px;
+}
+
+/* Password icon */
+.password-wrapper {
+    position: relative;
+}
+
+.togglePassword {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+/* Button */
+.primary-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 30px;
+    background: #355cbe;
+    color: white;
+    border: none;
+    margin-top: 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.primary-btn:hover {
+    background: #274b9d;
+}
+
+/* Switch text */
+.switch-text {
+    margin-top: 18px;
+}
+
+.switch-link {
+    color: #2b4da0;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
