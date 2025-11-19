@@ -1,7 +1,3 @@
-Tentu, saya akan menghilangkan sitasi dan merapikan kembali konten `README.md` Anda.
-
-Berikut adalah versi yang sudah diperbarui dan dirapikan:
-
 ````markdown
 # 🕹️ Tiny Tactics
 
