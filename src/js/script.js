@@ -1,4 +1,7 @@
-window.gameState = {
+// Agar fungsi bisa dipanggil dari HTML onclick
+window.restartGame = restartGame;
+window.resetScores = resetScores;
+export const gameState = {
     currentPlayer: "X",
     gameOver: false
 };
