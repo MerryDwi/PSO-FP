@@ -1,7 +1,14 @@
 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+	getAuth,
+	createUserWithEmailAndPassword,
+	signInWithEmailAndPassword,
+	onAuthStateChanged,
+	setPersistence,
+	browserSessionPersistence,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Konfigurasi Firebase langsung di sini
 const firebaseConfig = {
@@ -17,6 +24,11 @@ const firebaseConfig = {
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Paksa sesi hanya bertahan selama tab terbuka
+setPersistence(auth, browserSessionPersistence).catch((error) => {
+	console.error("Gagal mengatur session persistence:", error);
+});
 
 // Ambil elemen DOM
 const signInFormContainer = document.getElementById("signInForm");
