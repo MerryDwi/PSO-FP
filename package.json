@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "lint": "npx eslint src/js/script.js"
+    "lint": "npx eslint src/js/script.js",
+    "serve": "npx --yes serve . -l 3000",
+    "start": "npx --yes serve . -l 3000"
   },
   "repository": {
     "type": "git",

@@ -24,11 +24,16 @@ const loseSound = new Audio("./src/sounds/lose.mp3");
 const drawSound = new Audio("./src/sounds/draw.mp3");
 
 // Import logic (for browser, use <script type="module"> or bundle, for static fallback, use window.gameLogic)
-let checkWinnerLogic, checkDrawLogic, findBestMoveLogic;
-if (window.gameLogic) {
-  checkWinnerLogic = window.gameLogic.checkWinner;
-  checkDrawLogic = window.gameLogic.checkDraw;
-  findBestMoveLogic = window.gameLogic.findBestMove;
+// Helper function to get gameLogic functions dynamically
+function getGameLogic() {
+  if (window.gameLogic) {
+    return {
+      checkWinner: window.gameLogic.checkWinner,
+      checkDraw: window.gameLogic.checkDraw,
+      findBestMove: window.gameLogic.findBestMove,
+    };
+  }
+  return null;
 }
 
 // Buat dan inisialisasi papan
@@ -56,7 +61,8 @@ window.getCells = getCells;
 function checkWinner() {
   const cells = getCells();
   const cellValues = cells.map((cell) => cell.textContent);
-  const result = checkWinnerLogic ? checkWinnerLogic(cellValues) : null;
+  const gameLogic = getGameLogic();
+  const result = gameLogic ? gameLogic.checkWinner(cellValues) : null;
   if (result) {
     const [a, b, c] = result.combo;
     highlightWinner(cells[a], cells[b], cells[c]);
@@ -75,8 +81,9 @@ function highlightWinner(cellA, cellB, cellC) {
 function checkDraw() {
   const cells = getCells();
   const cellValues = cells.map((cell) => cell.textContent);
-  return checkDrawLogic
-    ? checkDrawLogic(cellValues)
+  const gameLogic = getGameLogic();
+  return gameLogic
+    ? gameLogic.checkDraw(cellValues)
     : cells.every((cell) => cell.textContent !== "");
 }
 window.checkDraw = checkDraw;
@@ -84,7 +91,8 @@ window.checkDraw = checkDraw;
 function findBestMove() {
   const currentCells = getCells();
   const cellValues = currentCells.map((cell) => cell.textContent);
-  const idx = findBestMoveLogic ? findBestMoveLogic(cellValues) : null;
+  const gameLogic = getGameLogic();
+  const idx = gameLogic ? gameLogic.findBestMove(cellValues) : null;
   if (idx === null || idx === undefined) return null;
   return currentCells[idx];
 }
@@ -291,6 +299,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (vsComputerRadio) {
+    // Set initial gameMode based on checked radio
+    if (vsComputerRadio.checked) {
+      window.gameMode = "playerVsComputer";
+    }
     vsComputerRadio.addEventListener("change", () => {
       window.gameMode = "playerVsComputer";
       resetScores();
@@ -298,6 +310,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (vsPlayerRadio) {
+    // Set initial gameMode based on checked radio
+    if (vsPlayerRadio.checked) {
+      window.gameMode = "playerVsFriend";
+    }
     vsPlayerRadio.addEventListener("change", () => {
       window.gameMode = "playerVsFriend";
       resetScores();
