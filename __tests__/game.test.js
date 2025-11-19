@@ -33,7 +33,10 @@ let mockThemeToggle;
 let mockVsComputerRadio;
 let mockVsPlayerRadio;
 
-let scriptModule; // Declare this variable to hold the imported module
+
+// Import pure logic for logic tests
+import * as gameLogic from '../src/js/gameLogic.js';
+let scriptModule; // For UI/state tests
 
 beforeAll(() => {
     // Mock audio elements globally for all tests
@@ -180,136 +183,55 @@ afterEach(() => {
 
 
 describe('Game Logic Tests', () => {
-
     // --- Tes untuk checkWinner ---
     test('checkWinner should return true for a horizontal win by X', () => {
-        // Atur mock DOM untuk tes spesifik ini
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', 'X', 'X', '', '', '', '', '', '']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkWinner()).toBe(true);
+        const cells = ['X', 'X', 'X', '', '', '', '', '', ''];
+        expect(gameLogic.checkWinner(cells)).not.toBeNull();
+        expect(gameLogic.checkWinner(cells).winner).toBe('X');
     });
-
     test('checkWinner should return true for a vertical win by O', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['O', '', '', 'O', '', '', 'O', '', '']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkWinner()).toBe(true);
+        const cells = ['O', '', '', 'O', '', '', 'O', '', ''];
+        expect(gameLogic.checkWinner(cells)).not.toBeNull();
+        expect(gameLogic.checkWinner(cells).winner).toBe('O');
     });
-
     test('checkWinner should return true for a diagonal win by X', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', '', '', '', 'X', '', '', '', 'X']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkWinner()).toBe(true);
+        const cells = ['X', '', '', '', 'X', '', '', '', 'X'];
+        expect(gameLogic.checkWinner(cells)).not.toBeNull();
+        expect(gameLogic.checkWinner(cells).winner).toBe('X');
     });
-
     test('checkWinner should return false if no winner', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', '']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkWinner()).toBe(false);
+        const cells = ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', ''];
+        expect(gameLogic.checkWinner(cells)).toBeNull();
     });
-
     // --- Tes untuk checkDraw ---
     test('checkDraw should return true if all cells are filled and no winner', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', 'O']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkDraw()).toBe(true);
+        const cells = ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', 'O'];
+        expect(gameLogic.checkDraw(cells)).toBe(true);
     });
-
     test('checkDraw should return false if there are empty cells', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', 'O', 'X', 'O', '', 'O', 'O', 'X', 'X']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        expect(scriptModule.checkDraw()).toBe(false);
+        const cells = ['X', 'O', 'X', 'O', '', 'O', 'O', 'X', 'X'];
+        expect(gameLogic.checkDraw(cells)).toBe(false);
     });
-
     // --- Tes untuk findBestMove (AI) ---
     test('findBestMove should block opponent (X) if they are about to win', () => {
-        const mockCellsState = ['X', 'X', '', '', '', '', '', '', ''];
-        const cells = createMockCells(mockCellsState);
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return cells;
-            }
-            return originalQuerySelectorAll(selector);
-        });
-
-        const chosenCell = scriptModule.findBestMove();
-        expect(chosenCell).toBe(cells[2]);
+        const cells = ['X', 'X', '', '', '', '', '', '', ''];
+        expect(gameLogic.findBestMove(cells)).toBe(2);
     });
-
     test('findBestMove should choose winning move if available', () => {
-        const mockCellsState = ['O', 'O', '', '', '', '', '', '', ''];
-        const cells = createMockCells(mockCellsState);
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return cells;
-            }
-            return originalQuerySelectorAll(selector);
-        });
-
-        const chosenCell = scriptModule.findBestMove();
-        expect(chosenCell).toBe(cells[2]);
+        const cells = ['O', 'O', '', '', '', '', '', '', ''];
+        expect(gameLogic.findBestMove(cells)).toBe(2);
     });
-
     test('findBestMove should choose center if available', () => {
-        const mockCellsState = ['', '', '', '', '', '', '', '', ''];
-        const cells = createMockCells(mockCellsState);
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return cells;
-            }
-            return originalQuerySelectorAll(selector);
-        });
-
-        const chosenCell = scriptModule.findBestMove();
-        expect(chosenCell).toBe(cells[4]);
+        const cells = ['', '', '', '', '', '', '', '', ''];
+        expect(gameLogic.findBestMove(cells)).toBe(4);
     });
-
     test('findBestMove should return a random available cell if no strategic moves', () => {
-        const mockCellsState = ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', ''];
-        const cells = createMockCells(mockCellsState);
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return cells;
-            }
-            return originalQuerySelectorAll(selector);
-        });
-
-        const chosenCell = scriptModule.findBestMove();
-        expect(chosenCell).toBe(cells[8]);
+        const cells = ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', ''];
+        expect(gameLogic.findBestMove(cells)).toBe(8);
     });
-
     test('findBestMove should return null if no available cells', () => {
-        document.querySelectorAll.mockImplementation((selector) => {
-            if (selector === ".cell") {
-                return createMockCells(['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', 'O']);
-            }
-            return originalQuerySelectorAll(selector);
-        });
-        const chosenCell = scriptModule.findBestMove();
-        expect(chosenCell).toBeNull();
+        const cells = ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', 'O'];
+        expect(gameLogic.findBestMove(cells)).toBeNull();
     });
 });
 

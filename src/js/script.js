@@ -1,3 +1,21 @@
+// Export for Jest/node testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        gameState: window.gameState,
+        scoreX: window.scoreX,
+        scoreO: window.scoreO,
+        gameMode: window.gameMode,
+        getCells,
+        checkWinner,
+        checkDraw,
+        findBestMove,
+        handleCellClick,
+        computerMove,
+        restartGame,
+        resetScores,
+        updateScoreDisplay
+    };
+}
 // Agar fungsi bisa dipanggil dari HTML onclick
 window.restartGame = restartGame;
 window.resetScores = resetScores;
@@ -26,6 +44,14 @@ const winSound = new Audio("./src/sounds/win.mp3");
 const loseSound = new Audio("./src/sounds/lose.mp3");
 const drawSound = new Audio("./src/sounds/draw.mp3");
 
+// Import logic (for browser, use <script type="module"> or bundle, for static fallback, use window.gameLogic)
+let checkWinnerLogic, checkDrawLogic, findBestMoveLogic;
+if (window.gameLogic) {
+    checkWinnerLogic = window.gameLogic.checkWinner;
+    checkDrawLogic = window.gameLogic.checkDraw;
+    findBestMoveLogic = window.gameLogic.findBestMove;
+}
+
 // Buat dan inisialisasi papan
 function initializeBoard() {
     board.innerHTML = '';
@@ -50,20 +76,12 @@ window.getCells = getCells;
 
 function checkWinner() {
     const cells = getCells();
-    const winCombinations = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ];
-
-    for (const combo of winCombinations) {
-        const [a, b, c] = combo;
-        if (cells[a].textContent &&
-            cells[a].textContent === cells[b].textContent &&
-            cells[b].textContent === cells[c].textContent) {
-            highlightWinner(cells[a], cells[b], cells[c]);
-            return true;
-        }
+    const cellValues = cells.map(cell => cell.textContent);
+    const result = checkWinnerLogic ? checkWinnerLogic(cellValues) : null;
+    if (result) {
+        const [a, b, c] = result.combo;
+        highlightWinner(cells[a], cells[b], cells[c]);
+        return true;
     }
     return false;
 }
@@ -76,48 +94,18 @@ function highlightWinner(cellA, cellB, cellC) {
 }
 
 function checkDraw() {
-    return getCells().every(cell => cell.textContent !== "");
+    const cells = getCells();
+    const cellValues = cells.map(cell => cell.textContent);
+    return checkDrawLogic ? checkDrawLogic(cellValues) : cells.every(cell => cell.textContent !== "");
 }
 window.checkDraw = checkDraw;
 
 function findBestMove() {
     const currentCells = getCells();
-    const availableMoves = currentCells.map((cell, index) => cell.textContent === "" ? index : null).filter(index => index !== null);
-
-    const checkWinnerForMinimax = (board, player) => {
-        const winCombinations = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6]
-        ];
-        return winCombinations.some(([a, b, c]) => board[a] === player && board[b] === player && board[c] === player);
-    };
-
-    if (availableMoves.length === 0) return null;
-
-    for (const move of availableMoves) {
-        const temp = currentCells.map(c => c.textContent);
-        temp[move] = 'O';
-        if (checkWinnerForMinimax(temp, 'O')) return currentCells[move];
-    }
-
-    for (const move of availableMoves) {
-        const temp = currentCells.map(c => c.textContent);
-        temp[move] = 'X';
-        if (checkWinnerForMinimax(temp, 'X')) return currentCells[move];
-    }
-
-    if (currentCells[4].textContent === "") return currentCells[4];
-
-    const corners = [0, 2, 6, 8];
-    const availableCorners = corners.filter(i => currentCells[i].textContent === "");
-    if (availableCorners.length > 0) return currentCells[availableCorners[Math.floor(Math.random() * availableCorners.length)]];
-
-    const edges = [1, 3, 5, 7];
-    const availableEdges = edges.filter(i => currentCells[i].textContent === "");
-    if (availableEdges.length > 0) return currentCells[availableEdges[Math.floor(Math.random() * availableEdges.length)]];
-
-    return currentCells[availableMoves[Math.floor(Math.random() * availableMoves.length)]];
+    const cellValues = currentCells.map(cell => cell.textContent);
+    const idx = findBestMoveLogic ? findBestMoveLogic(cellValues) : null;
+    if (idx === null || idx === undefined) return null;
+    return currentCells[idx];
 }
 window.findBestMove = findBestMove;
 

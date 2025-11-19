@@ -2,7 +2,7 @@ Tentu, saya akan menghilangkan sitasi dan merapikan kembali konten `README.md` A
 
 Berikut adalah versi yang sudah diperbarui dan dirapikan:
 
-```markdown
+````markdown
 # 🕹️ Tiny Tactics
 
 Tiny Tactics adalah game papan strategis 3x3 berbasis web yang terinspirasi dari klasik tic-tac-toe. Dibangun menggunakan JavaScript, HTML, dan CSS modern, game ini menawarkan dua mode utama: bermain melawan teman (lokal) atau menantang lawan komputer (AI dasar).
@@ -78,27 +78,35 @@ Proyek ini menerapkan pipeline DevOps modern untuk memastikan proses pengembanga
 
 ---
 
-fp-pso/
-├── index.html \# Halaman utama (Sign In/Sign Up)
-├── game.html \# Halaman utama game X O
+PSO-FP/
+├── index.html # Halaman utama (Sign In/Sign Up)
+├── game.html # Halaman utama game X O
 ├── src/
 │ ├── js/
-│ │ └── script.js \# Logika utama game
-│ │ └── auth.js \# Logika otentikasi (Sign In/Up)
+│ │ ├── script.js # Logika utama game (UI, event, integrasi logic)
+│ │ ├── gameLogic.js # Pure logic Tic Tac Toe (untuk test & browser)
+│ │ └── auth.js # Logika otentikasi (Sign In/Up)
 │ ├── css/
-│ │ └── style.css \# Gaya utama game
-│ │ └── auth.css \# Gaya untuk halaman autentikasi
-│ └── images/ \# Logo dan gambar
+│ │ ├── style.css # Gaya utama game
+│ │ └── auth.css # Gaya untuk halaman autentikasi
+│ ├── images/ # Logo dan gambar
+│ └── sounds/ # Efek suara (win.mp3, lose.mp3, draw.mp3, dst)
 ├── **tests**/
-│ └── game.test.js \# Unit tests untuk logika game
-├── .github/workflows/
-│ ├── ci.yml \# Pipeline Continuous Integration (lint, test, audit)
-│ └── cd.yml \# Pipeline Continuous Deployment (deploy ke Vercel)
-├── package.json \# Konfigurasi npm & dependencies
-├── eslint.config.mjs \# Konfigurasi ESLint
-├── babel.config.js \# Konfigurasi Babel
-└── jest.config.js \# Konfigurasi Jest
-```
+│ └── game.test.js # Unit & UI tests (Jest)
+├── .github/
+│ └── workflows/
+│ ├── ci.yml # Pipeline Continuous Integration (lint, test, audit)
+│ └── cd.yml # Pipeline Continuous Deployment (deploy ke Vercel)
+├── package.json # Konfigurasi npm & dependencies
+├── eslint.config.mjs # Konfigurasi ESLint
+├── babel.config.js # Konfigurasi Babel
+└── jest.config.js # Konfigurasi Jest
+
+### Catatan Struktur & Modularisasi
+
+- **gameLogic.js**: Berisi seluruh logic murni (checkWinner, checkDraw, findBestMove) yang bisa di-import langsung oleh Jest untuk unit test, maupun diakses window untuk browser statis.
+- **script.js**: Berisi integrasi logic, event handler, dan UI DOM. Untuk kebutuhan test, diekspor dengan `module.exports` agar Jest dapat mengakses fungsi dan variabel penting.
+- **Testing**: Kini mendukung test logic murni (langsung ke gameLogic.js) dan test UI/event (melalui script.js dengan mock DOM).
 
 ---
 
@@ -142,6 +150,8 @@ Ikuti langkah-langkah berikut untuk mengatur dan menjalankan Tiny Tactics secara
   ```sh
   npm test
   ```
+````
+
 - **Jalankan Pemeriksaan Lint & Keamanan (ESLint):**
   ```sh
   npm run lint
