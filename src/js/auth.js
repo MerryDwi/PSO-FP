@@ -2,47 +2,45 @@
 // AUTH.JS — Halaman LOGIN & SIGNUP
 // ===============================
 
-// Ambil elemen
-const signInForm = document.getElementById("signInForm");
-const signUpForm = document.getElementById("signUpForm");
+import { auth } from './firebase.config.js'; // Impor objek auth
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "firebase/auth"; // Impor fungsi Firebase Auth
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+// ===============================
+// SETUP VARIABEL DAN LOGIKA
+// ===============================
+
+// Ambil elemen DOM
+const signInFormContainer = document.getElementById("signInForm");
+const signUpFormContainer = document.getElementById("signUpForm");
 const switchToSignUp = document.getElementById("switchToSignUp");
 const switchToSignIn = document.getElementById("switchToSignIn");
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
 
 // ------------------------------
 // TOGGLE SIGN-IN <-> SIGN-UP
 // ------------------------------
 switchToSignUp?.addEventListener("click", () => {
-    signInForm.style.display = "none";
-    signUpForm.style.display = "block";
+    signInFormContainer.classList.add("hidden"); 
+    signUpFormContainer.classList.remove("hidden");
 });
 
 switchToSignIn?.addEventListener("click", () => {
-    signUpForm.style.display = "none";
-    signInForm.style.display = "block";
+    signUpFormContainer.classList.add("hidden");
+    signInFormContainer.classList.remove("hidden");
 });
 
 // ------------------------------
-// SHOW / HIDE PASSWORD
+// LOGIN DENGAN FIREBASE
 // ------------------------------
-document.querySelectorAll(".togglePassword").forEach(toggle => {
-    toggle.addEventListener("click", () => {
-        const input = toggle.previousElementSibling;
-        if (input.type === "password") {
-            input.type = "text";
-            toggle.textContent = "🙈";
-        } else {
-            input.type = "password";
-            toggle.textContent = "👁️";
-        }
-    });
-});
-
-// ------------------------------
-// LOGIN (sementara — tanpa Firebase)
-// Akan diganti oleh Malvin nanti
-// ------------------------------
-if (signInForm) {
-    signInForm.addEventListener("submit", (e) => {
+if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
         // ambil nilai input
@@ -54,36 +52,75 @@ if (signInForm) {
             return;
         }
 
-        // LOGIN SEMENTARA
-        // Nanti Malvin ganti dengan Firebase signInWithEmailAndPassword
-        localStorage.setItem("user", email);
-
-        // Redirect ke game
-        window.location.href = "game.html";
+        // Gunakan Firebase signInWithEmailAndPassword
+        signInWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            console.log("Login sukses:", userCredential.user);
+            window.location.href = "game.html"; // Redirect ke game
+          })
+          .catch((error) => {
+            console.error("Error Login:", error.code, error.message);
+            alert(`Gagal login: ${error.message.split('(')[0].trim()}`);
+          });
     });
 }
 
 // ------------------------------
-// SIGN UP (sementara — tanpa Firebase)
+// SIGN UP DENGAN FIREBASE
 // ------------------------------
-if (signUpForm) {
-    signUpForm.addEventListener("submit", (e) => {
+if (signupForm) {
+    signupForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
         const email = document.getElementById("signupEmail").value.trim();
         const password = document.getElementById("signupPassword").value.trim();
+        const confirmPassword = document.getElementById("signupConfirm").value.trim();
+
+        // Constant-time comparison to prevent timing attacks
+        function constantTimeEquals(a, b) {
+            if (a.length !== b.length) return false;
+            let result = 0;
+            for (let i = 0; i < a.length; i++) {
+                result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+            }
+            return result === 0;
+        }
+        
+        if (!constantTimeEquals(password, confirmPassword)) {
+            alert("Password dan konfirmasi password tidak cocok!");
+            return;
+        }
 
         if (email === "" || password === "") {
             alert("Email dan password wajib diisi!");
             return;
         }
 
-        // REGISTRASI SEMENTARA
-        // Nanti Malvin ganti dengan Firebase createUserWithEmailAndPassword
-        localStorage.setItem("user", email);
-
-        alert("Akun berhasil dibuat! Silakan login.");
-        signUpForm.style.display = "none";
-        signInForm.style.display = "block";
+        // Gunakan Firebase createUserWithEmailAndPassword
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            console.log("Sign Up sukses:", userCredential.user);
+            alert("Akun berhasil dibuat! Silakan login.");
+    
+            // Alihkan ke form login
+            signUpFormContainer.classList.add("hidden");
+            signInFormContainer.classList.remove("hidden");
+          })
+          .catch((error) => {
+            console.error("Error Sign Up:", error.code, error.message);
+            alert(`Gagal mendaftar: ${error.message.split('(')[0].trim()}`);
+          });
     });
 }
+
+// ------------------------------
+// Cek Status Otentikasi saat memuat index.html
+// ------------------------------
+
+// Cek jika pengguna sudah login, langsung arahkan ke game.html
+onAuthStateChanged(auth, (user) => {
+    // Hanya redirect jika kita berada di index.html
+    if (user && window.location.pathname.endsWith('index.html')) {
+        window.location.href = 'game.html';
+    }
+});

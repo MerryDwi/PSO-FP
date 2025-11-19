@@ -11,6 +11,7 @@
 
     <!-- Logo -->
     <link rel="icon" href="./src/images/logo.png" />
+    <script type="module" src="main.js"></script>
 </head>
 
 <body>
@@ -75,7 +76,11 @@
 
     </div>
 
-    <script src="./src/js/auth.js"></script>
+    <script type="module" src="main.js"></script>
+    <script>
+        import { initializeApp } from "firebase/app";
+        import { getAuth } from "firebase/auth";
+    </script>
 
 </body>
 
