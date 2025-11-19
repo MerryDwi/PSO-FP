@@ -1,3 +1,6 @@
+// Agar fungsi bisa dipanggil dari HTML onclick
+window.restartGame = restartGame;
+window.resetScores = resetScores;
 export const gameState = {
     currentPlayer: "X",
     gameOver: false
@@ -19,7 +22,8 @@ const vsPlayerRadio = document.getElementById("vsPlayer");
 const resetButton = document.getElementById("reset-score-button");
 
 // Suara
-const moveSound = new Audio("./src/sounds/move.mp3");
+// move.mp3 tidak ada, gunakan win.mp3 sebagai fallback agar tidak error 404
+const moveSound = new Audio("./src/sounds/win.mp3");
 const winSound = new Audio("./src/sounds/win.mp3");
 const loseSound = new Audio("./src/sounds/lose.mp3");
 const drawSound = new Audio("./src/sounds/draw.mp3");

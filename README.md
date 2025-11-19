@@ -45,7 +45,38 @@ Proyek ini mengadopsi serangkaian alat modern untuk mengotomatisasi dan menyeder
 ---
 
 ## 🧩 Struktur Proyek
-```
+
+---
+
+## 🛠️ DevOps CI/CD Workflow Architecture
+
+Proyek ini menerapkan pipeline DevOps modern untuk memastikan proses pengembangan, pengujian, dan deployment berjalan otomatis dan terintegrasi. Berikut adalah arsitektur workflow yang digunakan:
+
+![Workflow Architecture](./workflow-architecture.png)
+
+**Penjelasan Alur:**
+
+1. **Feature Development**
+
+   - Desain UI/UX dibuat di Figma.
+   - Implementasi fitur dilakukan di VS Code.
+   - Data aplikasi tersimpan di Firebase Database.
+
+2. **Continuous Integration (CI)**
+
+   - Kode di-push ke repository GitHub.
+   - GitHub Actions CI otomatis menjalankan:
+     - Lint
+     - Unit Test
+     - Build
+     - Auth Integration Test
+
+3. **Continuous Delivery (CD)**
+   - Setelah CI sukses, pipeline CD berjalan:
+     - Build & Deploy ke Vercel (Production)
+     - Sinkronisasi data/hosting ke Firebase
+
+---
 
 fp-pso/
 ├── index.html \# Halaman utama (Sign In/Sign Up)
@@ -67,8 +98,7 @@ fp-pso/
 ├── eslint.config.mjs \# Konfigurasi ESLint
 ├── babel.config.js \# Konfigurasi Babel
 └── jest.config.js \# Konfigurasi Jest
-
-````
+```
 
 ---
 
@@ -78,11 +108,11 @@ Ikuti langkah-langkah berikut untuk mengatur dan menjalankan Tiny Tactics secara
 
 ### Persyaratan Sistem
 
-* **Node.js** (v18+)
-* **npm** (Node Package Manager)
-* **Git**
-* **Web Browser**
-* **VS Code Live Server Extension** (Opsional, direkomendasikan untuk pengembangan lokal)
+- **Node.js** (v18+)
+- **npm** (Node Package Manager)
+- **Git**
+- **Web Browser**
+- **VS Code Live Server Extension** (Opsional, direkomendasikan untuk pengembangan lokal)
 
 ### Langkah-Langkah Instalasi
 
@@ -108,23 +138,26 @@ Ikuti langkah-langkah berikut untuk mengatur dan menjalankan Tiny Tactics secara
 
 ### Menjalankan Tes & Lint
 
-* **Jalankan Tes Unit (Jest):**
-    ```sh
-    npm test
-    ```
-* **Jalankan Pemeriksaan Lint & Keamanan (ESLint):**
-    ```sh
-    npm run lint
-    ```
+- **Jalankan Tes Unit (Jest):**
+  ```sh
+  npm test
+  ```
+- **Jalankan Pemeriksaan Lint & Keamanan (ESLint):**
+  ```sh
+  npm run lint
+  ```
 
 ---
 
 ## 👨‍💻 Dikembangkan Oleh
 
-* Putri Salsabilla Insani
-* Qoyyimil Jamilah
-* Maulina Nur Laila
-* Awwaliyah Aliyah
+- Putri Salsabilla Insani
+- Qoyyimil Jamilah
+- Maulina Nur Laila
+- Awwaliyah Aliyah
 
 **Dokumentasi Proyek Lengkap:** [https://its.id/m/PSO-Docs-Group2](https://its.id/m/PSO-Docs-Group2)
-````
+
+```
+
+```
