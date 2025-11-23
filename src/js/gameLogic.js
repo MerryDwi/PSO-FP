@@ -1,7 +1,8 @@
-// gameLogic.js
-// Pure logic for Tic Tac Toe, exportable for both Jest and browser usage
+// ===============================
+// PURE GAME LOGIC (SAFE FOR BROWSER & JEST)
+// ===============================
 
-// Check winner on a 1D array of 9 cells (['X', '', ...])
+// Check winner on a 1D array of 9 strings ["X", "", ..., "O"]
 function checkWinner(cells) {
   const winCombinations = [
     [0, 1, 2],
@@ -13,6 +14,7 @@ function checkWinner(cells) {
     [0, 4, 8],
     [2, 4, 6],
   ];
+
   for (const combo of winCombinations) {
     const [a, b, c] = combo;
     if (cells[a] && cells[a] === cells[b] && cells[b] === cells[c]) {
@@ -26,57 +28,61 @@ function checkDraw(cells) {
   return cells.every((cell) => cell !== "");
 }
 
-// Minimax algorithm untuk membuat komputer lebih sulit (unbeatable)
+// ===============================
+// Minimax AI Algorithm (Unbeatable AI)
+// ===============================
 function minimax(cells, depth, isMaximizing, player = "O", opponent = "X") {
-  const winner = checkWinner(cells);
-  if (winner) {
-    return winner.winner === player ? 10 - depth : depth - 10;
+  const win = checkWinner(cells);
+  if (win) {
+    return win.winner === player ? 10 - depth : depth - 10;
   }
   if (checkDraw(cells)) {
     return 0;
   }
 
   if (isMaximizing) {
-    let bestScore = -Infinity;
+    let best = -Infinity;
     for (let i = 0; i < 9; i++) {
       if (cells[i] === "") {
         cells[i] = player;
         const score = minimax(cells, depth + 1, false, player, opponent);
         cells[i] = "";
-        bestScore = Math.max(score, bestScore);
+        best = Math.max(best, score);
       }
     }
-    return bestScore;
+    return best;
   } else {
-    let bestScore = Infinity;
+    let best = Infinity;
     for (let i = 0; i < 9; i++) {
       if (cells[i] === "") {
         cells[i] = opponent;
         const score = minimax(cells, depth + 1, true, player, opponent);
         cells[i] = "";
-        bestScore = Math.min(score, bestScore);
+        best = Math.min(best, score);
       }
     }
-    return bestScore;
+    return best;
   }
 }
 
 function findBestMove(cells, player = "O", opponent = "X") {
   const availableMoves = cells
-    .map((cell, idx) => (cell === "" ? idx : null))
-    .filter((idx) => idx !== null);
+    .map((v, i) => (v === "" ? i : null))
+    .filter((i) => i !== null);
+
   if (availableMoves.length === 0) return null;
 
-  // Prioritas urutan langkah (untuk tie-breaking saat semua move sama baiknya)
-  const movePriority = [4, 0, 2, 6, 8, 1, 3, 5, 7]; // Center, corners, edges
+  // Preferred move order when scores are tied:
+  const priority = [4, 0, 2, 6, 8, 1, 3, 5, 7];
 
   let bestScore = -Infinity;
-  let bestMoves = []; // Simpan semua move dengan score tertinggi
+  let bestMoves = [];
 
   for (const move of availableMoves) {
-    const temp = [...cells];
-    temp[move] = player;
-    const score = minimax(temp, 0, false, player, opponent);
+    const cloned = [...cells];
+    cloned[move] = player;
+    const score = minimax(cloned, 0, false, player, opponent);
+
     if (score > bestScore) {
       bestScore = score;
       bestMoves = [move];
@@ -85,19 +91,21 @@ function findBestMove(cells, player = "O", opponent = "X") {
     }
   }
 
-  // Jika ada beberapa move dengan score sama, pilih yang punya prioritas tertinggi
+  // If multiple moves have same score, choose based on priority
   if (bestMoves.length > 1) {
-    for (const priority of movePriority) {
-      if (bestMoves.includes(priority)) {
-        return priority;
-      }
+    for (const p of priority) {
+      if (bestMoves.includes(p)) return p;
     }
   }
 
   return bestMoves[0];
 }
 
-// Untuk penggunaan di browser tanpa import/export
+// ===============================
+// EXPORTS FOR BROWSER + NODE/JEST
+// ===============================
+
+// Browser (no module system)
 if (typeof window !== "undefined") {
   window.gameLogic = {
     checkWinner,
@@ -106,7 +114,7 @@ if (typeof window !== "undefined") {
   };
 }
 
-// Export untuk Jest/node testing
+// Node / Jest testing
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     checkWinner,
