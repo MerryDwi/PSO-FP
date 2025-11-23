@@ -1,9 +1,10 @@
 // ===============================
-// GLOBAL STATE (NOW SAFE FOR JEST & BROWSER)
+// GLOBAL STATE (SAFE FOR BROWSER & JEST)
 // ===============================
 const isNode = typeof window === "undefined";
 
 if (!isNode) {
+  // Browser: put state on window
   window.gameState = { currentPlayer: "X", gameOver: false };
   window.scoreX = 0;
   window.scoreO = 0;
@@ -12,12 +13,19 @@ if (!isNode) {
   window.gameTimer = {
     seconds: 0,
     interval: null,
-    running: false
+    running: false,
   };
 }
 
-// Fallback for Jest environment
-const globalNS = isNode ? {} : window;
+// globalNS will host state both for browser (window) and node ({} or global)
+const globalNS = isNode ? (globalThis.__tiny_tactics_ns__ = globalThis.__tiny_tactics_ns__ || {}) : window;
+
+// Ensure Node/Jest has default state values (fallbacks)
+globalNS.gameState = globalNS.gameState || { currentPlayer: "X", gameOver: false };
+globalNS.scoreX = typeof globalNS.scoreX === "number" ? globalNS.scoreX : 0;
+globalNS.scoreO = typeof globalNS.scoreO === "number" ? globalNS.scoreO : 0;
+globalNS.gameMode = globalNS.gameMode || "playerVsComputer";
+globalNS.gameTimer = globalNS.gameTimer || { seconds: 0, interval: null, running: false };
 
 // ===============================
 // DOM ELEMENTS (AUTO-MOCK SAFE)
@@ -44,7 +52,7 @@ if (!isNode) {
   resetButton = document.getElementById("reset-score-button");
 }
 
-// Sounds
+// Sounds (no-op in Node)
 const winSound = !isNode ? new Audio("./src/sounds/win.mp3") : { play() {} };
 const loseSound = !isNode ? new Audio("./src/sounds/lose.mp3") : { play() {} };
 const drawSound = !isNode ? new Audio("./src/sounds/draw.mp3") : { play() {} };
@@ -97,6 +105,7 @@ function checkWinner() {
 globalNS.checkWinner = checkWinner;
 
 function highlightWinner(a, b, c) {
+  if (!a || !b || !c) return;
   a.classList.add("winner");
   b.classList.add("winner");
   c.classList.add("winner");
@@ -160,8 +169,8 @@ function resetTimer() {
 
 function updateTimerUI() {
   if (isNode) return;
-  document.getElementById("timer").textContent =
-    "Time: " + globalNS.gameTimer.seconds + "s";
+  const t = document.getElementById("timer");
+  if (t) t.textContent = "Time: " + globalNS.gameTimer.seconds + "s";
 }
 
 // ===============================
@@ -169,6 +178,7 @@ function updateTimerUI() {
 // ===============================
 function handleCellClick(event) {
   const cell = event.target;
+  if (!cell) return;
 
   if (cell.textContent !== "" || globalNS.gameState.gameOver) return;
   startTimer();
@@ -212,9 +222,11 @@ globalNS.handleCellClick = handleCellClick;
 function finishGame(text) {
   globalNS.gameState.gameOver = true;
   if (!isNode) {
-    gameOverMessage.textContent = text;
-    gameOverMessage.style.display = "block";
-    restartButton.style.display = "block";
+    if (gameOverMessage) {
+      gameOverMessage.textContent = text;
+      gameOverMessage.style.display = "block";
+    }
+    if (restartButton) restartButton.style.display = "block";
   }
   stopTimer();
 }
@@ -240,7 +252,6 @@ function computerMove() {
 
   if (checkDraw()) {
     finishGame("It's a draw!");
-    drawSound.play();
     return;
   }
 
@@ -260,8 +271,8 @@ function restartGame() {
       c.textContent = "";
       c.classList.remove("winner");
     });
-    gameOverMessage.style.display = "none";
-    restartButton.style.display = "none";
+    if (gameOverMessage) gameOverMessage.style.display = "none";
+    if (restartButton) restartButton.style.display = "none";
   }
 
   resetTimer();
@@ -282,18 +293,20 @@ globalNS.resetScores = resetScores;
 if (!isNode) {
   document.addEventListener("DOMContentLoaded", () => {
     initializeBoard();
-    restartButton.addEventListener("click", restartGame);
-    resetButton.addEventListener("click", resetScores);
+    if (restartButton) restartButton.addEventListener("click", restartGame);
+    if (resetButton) resetButton.addEventListener("click", resetScores);
 
-    vsComputerRadio.addEventListener("change", () => {
-      globalNS.gameMode = "playerVsComputer";
-      restartGame();
-    });
+    if (vsComputerRadio)
+      vsComputerRadio.addEventListener("change", () => {
+        globalNS.gameMode = "playerVsComputer";
+        restartGame();
+      });
 
-    vsPlayerRadio.addEventListener("change", () => {
-      globalNS.gameMode = "playerVsFriend";
-      restartGame();
-    });
+    if (vsPlayerRadio)
+      vsPlayerRadio.addEventListener("change", () => {
+        globalNS.gameMode = "playerVsFriend";
+        restartGame();
+      });
   });
 }
 
