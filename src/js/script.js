@@ -1,7 +1,19 @@
 // ===============================
+// FIX FOR JEST ENVIRONMENT
+// ===============================
+
+// Jest uses JSDOM which has window, so we must detect Jest manually
+const isTestEnv =
+  typeof process !== "undefined" &&
+  process.env.JEST_WORKER_ID !== undefined;
+
+// In Jest → isNode must be TRUE
+const isNode = isTestEnv || typeof window === "undefined";
+
+// ===============================
 // GLOBAL STATE (SAFE FOR BROWSER & JEST)
 // ===============================
-const isNode = typeof window === "undefined";
+
 
 if (!isNode) {
   // Browser: put state on window
