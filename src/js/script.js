@@ -1,13 +1,28 @@
-// 1. DEFINE STATE VARIABLES GLOBALLY (Ini harus di bagian paling atas)
+// ===============================
+// GLOBAL STATE
+// ===============================
 window.gameState = {
   currentPlayer: "X",
   gameOver: false,
 };
+
 window.scoreX = 0;
 window.scoreO = 0;
+
 window.gameMode = "playerVsComputer";
 
-// Variabel DOM
+// ===============================
+// TIMER STATE
+// ===============================
+window.gameTimer = {
+  seconds: 0,
+  interval: null,
+  running: false
+};
+
+// ===============================
+// DOM ELEMENTS
+// ===============================
 const board = document.getElementById("game-board");
 const gameOverMessage = document.getElementById("game-over-message");
 const restartButton = document.getElementById("restart-button");
@@ -18,25 +33,21 @@ const vsComputerRadio = document.getElementById("vsComputer");
 const vsPlayerRadio = document.getElementById("vsPlayer");
 const resetButton = document.getElementById("reset-score-button");
 
-// Suara
+// Sounds
 const winSound = new Audio("./src/sounds/win.mp3");
 const loseSound = new Audio("./src/sounds/lose.mp3");
 const drawSound = new Audio("./src/sounds/draw.mp3");
 
-// Import logic (for browser, use <script type="module"> or bundle, for static fallback, use window.gameLogic)
-// Helper function to get gameLogic functions dynamically
+// ===============================
+// IMPORT GAME LOGIC
+// ===============================
 function getGameLogic() {
-  if (window.gameLogic) {
-    return {
-      checkWinner: window.gameLogic.checkWinner,
-      checkDraw: window.gameLogic.checkDraw,
-      findBestMove: window.gameLogic.findBestMove,
-    };
-  }
-  return null;
+  return window.gameLogic || null;
 }
 
-// Buat dan inisialisasi papan
+// ===============================
+// INITIALIZE BOARD
+// ===============================
 function initializeBoard() {
   board.innerHTML = "";
   for (let i = 0; i < 9; i++) {
@@ -45,7 +56,6 @@ function initializeBoard() {
   updateScoreDisplay();
 }
 
-// Membuat cell dan tambahkan event listener
 function createCell() {
   const cell = document.createElement("div");
   cell.classList.add("cell");
@@ -58,11 +68,15 @@ function getCells() {
 }
 window.getCells = getCells;
 
+// ===============================
+// CHECK WIN / DRAW
+// ===============================
 function checkWinner() {
   const cells = getCells();
-  const cellValues = cells.map((cell) => cell.textContent);
-  const gameLogic = getGameLogic();
-  const result = gameLogic ? gameLogic.checkWinner(cellValues) : null;
+  const values = cells.map(c => c.textContent);
+  const logic = getGameLogic();
+  const result = logic ? logic.checkWinner(values) : null;
+
   if (result) {
     const [a, b, c] = result.combo;
     highlightWinner(cells[a], cells[b], cells[c]);
@@ -72,154 +86,196 @@ function checkWinner() {
 }
 window.checkWinner = checkWinner;
 
-function highlightWinner(cellA, cellB, cellC) {
-  cellA.classList.add("winner");
-  cellB.classList.add("winner");
-  cellC.classList.add("winner");
+function highlightWinner(a, b, c) {
+  a.classList.add("winner");
+  b.classList.add("winner");
+  c.classList.add("winner");
 }
 
 function checkDraw() {
   const cells = getCells();
-  const cellValues = cells.map((cell) => cell.textContent);
-  const gameLogic = getGameLogic();
-  return gameLogic
-    ? gameLogic.checkDraw(cellValues)
-    : cells.every((cell) => cell.textContent !== "");
+  return cells.every(c => c.textContent !== "");
 }
 window.checkDraw = checkDraw;
 
+// ===============================
+// AI MOVE
+// ===============================
 function findBestMove() {
-  const currentCells = getCells();
-  const cellValues = currentCells.map((cell) => cell.textContent);
-  const gameLogic = getGameLogic();
-  const idx = gameLogic ? gameLogic.findBestMove(cellValues) : null;
-  if (idx === null || idx === undefined) return null;
-  return currentCells[idx];
+  const cells = getCells().map(c => c.textContent);
+  const logic = getGameLogic();
+  const idx = logic ? logic.findBestMove(cells) : null;
+  return idx !== null ? document.querySelectorAll(".cell")[idx] : null;
 }
 window.findBestMove = findBestMove;
 
+// ===============================
+// SCORE UPDATE
+// ===============================
 function updateScoreDisplay(prevX = window.scoreX, prevO = window.scoreO) {
-  if (scoreXElement && scoreOElement) {
-    scoreXElement.textContent = window.scoreX;
-    scoreOElement.textContent = window.scoreO;
+  scoreXElement.textContent = window.scoreX;
+  scoreOElement.textContent = window.scoreO;
 
-    if (window.scoreX > prevX) {
-      scoreXElement.classList.remove("score-animate");
-      void scoreXElement.offsetWidth;
-      scoreXElement.classList.add("score-animate");
-    }
-    if (window.scoreO > prevO) {
-      scoreOElement.classList.remove("score-animate");
-      void scoreOElement.offsetWidth;
-      scoreOElement.classList.add("score-animate");
-    }
+  if (window.scoreX > prevX) {
+    animateScore(scoreXElement);
+  }
+  if (window.scoreO > prevO) {
+    animateScore(scoreOElement);
   }
 }
-window.updateScoreDisplay = updateScoreDisplay;
 
-scoreXElement?.addEventListener("animationend", () => {
-  scoreXElement.classList.remove("score-animate");
-});
-scoreOElement?.addEventListener("animationend", () => {
-  scoreOElement.classList.remove("score-animate");
-});
+function animateScore(el) {
+  el.classList.remove("score-animate");
+  void el.offsetWidth;
+  el.classList.add("score-animate");
+}
 
+scoreXElement.addEventListener("animationend", () =>
+  scoreXElement.classList.remove("score-animate")
+);
+
+scoreOElement.addEventListener("animationend", () =>
+  scoreOElement.classList.remove("score-animate")
+);
+
+// ===============================
+// TIMER FIXED VERSION
+// ===============================
+function startTimer() {
+  if (window.gameTimer.running) return;
+
+  window.gameTimer.running = true;
+  window.gameTimer.interval = setInterval(() => {
+    window.gameTimer.seconds++;
+    updateTimerUI();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(window.gameTimer.interval);
+  window.gameTimer.running = false;
+}
+
+function resetTimer() {
+  stopTimer();
+  window.gameTimer.seconds = 0;
+  updateTimerUI();
+}
+
+function updateTimerUI() {
+  const t = document.getElementById("timer");
+  t.textContent = `Time: ${window.gameTimer.seconds}s`;
+}
+
+// ===============================
+// PLAYER MOVE (FIX TIMER BUG)
+// ===============================
 function handleCellClick(event) {
-  const clickedCell = event.target;
-  if (clickedCell.textContent === "" && !window.gameState.gameOver) {
-    clickedCell.textContent = window.gameState.currentPlayer;
-    // moveSound dihapus
+  const cell = event.target;
 
-    if (checkWinner()) {
-      gameOverMessage.textContent = `${window.gameState.currentPlayer} wins!`;
-      gameOverMessage.style.display = "block";
-      window.gameState.gameOver = true;
-      restartButton.style.display = "block";
+  if (cell.textContent !== "" || window.gameState.gameOver) return;
 
-      if (window.gameState.currentPlayer === "X") {
-        const prev = window.scoreX;
-        window.scoreX++;
-        winSound.currentTime = 0;
-        winSound.play();
-        updateScoreDisplay(prev, window.scoreO);
-      } else {
-        const prev = window.scoreO;
-        window.scoreO++;
+  // Start timer ONLY once
+  startTimer();
 
-        if (window.gameMode === "playerVsComputer") {
-          loseSound.currentTime = 0;
-          loseSound.play(); // O adalah komputer
-        } else {
-          winSound.currentTime = 0;
-          winSound.play(); // O adalah player, jadi play winSound juga
-        }
+  cell.textContent = window.gameState.currentPlayer;
 
-        updateScoreDisplay(window.scoreX, prev);
-      }
-    } else if (checkDraw()) {
-      gameOverMessage.textContent = "It's a draw!";
-      gameOverMessage.style.display = "block";
-      window.gameState.gameOver = true;
-      restartButton.style.display = "block";
-      drawSound.play();
+  // WIN
+  if (checkWinner()) {
+    gameOverMessage.textContent = `${window.gameState.currentPlayer} wins!`;
+    gameOverMessage.style.display = "block";
+    window.gameState.gameOver = true;
+    restartButton.style.display = "block";
+    stopTimer();
+
+    if (window.gameState.currentPlayer === "X") {
+      const prev = window.scoreX;
+      window.scoreX++;
+      winSound.play();
+      updateScoreDisplay(prev, window.scoreO);
     } else {
-      window.gameState.currentPlayer =
-        window.gameState.currentPlayer === "X" ? "O" : "X";
-      if (
-        window.gameMode === "playerVsComputer" &&
-        window.gameState.currentPlayer === "O" &&
-        !window.gameState.gameOver
-      ) {
-        setTimeout(computerMove, 500);
-      }
-    }
-  }
-}
-window.handleCellClick = handleCellClick;
-
-function computerMove() {
-  if (window.gameState.gameOver) return;
-  const bestMoveCell = findBestMove();
-
-  if (bestMoveCell) {
-    bestMoveCell.textContent = "O";
-    // moveSound dihapus
-
-    if (checkWinner()) {
-      gameOverMessage.textContent = "O wins!";
-      gameOverMessage.style.display = "block";
-      window.gameState.gameOver = true;
-      restartButton.style.display = "block";
       const prev = window.scoreO;
       window.scoreO++;
       loseSound.play();
       updateScoreDisplay(window.scoreX, prev);
-    } else if (checkDraw()) {
-      gameOverMessage.textContent = "It's a draw!";
-      gameOverMessage.style.display = "block";
-      window.gameState.gameOver = true;
-      restartButton.style.display = "block";
-      drawSound.play();
-    } else {
-      window.gameState.currentPlayer = "X";
     }
+    return;
   }
+
+  // DRAW
+  if (checkDraw()) {
+    gameOverMessage.textContent = "It's a draw!";
+    gameOverMessage.style.display = "block";
+    window.gameState.gameOver = true;
+    restartButton.style.display = "block";
+    stopTimer();
+    drawSound.play();
+    return;
+  }
+
+  // SWITCH PLAYER
+  window.gameState.currentPlayer = window.gameState.currentPlayer === "X" ? "O" : "X";
+
+  // AI MOVE
+  if (window.gameMode === "playerVsComputer" && window.gameState.currentPlayer === "O") {
+    setTimeout(computerMove, 400);
+  }
+}
+window.handleCellClick = handleCellClick;
+
+// ===============================
+// COMPUTER MOVE
+// ===============================
+function computerMove() {
+  if (window.gameState.gameOver) return;
+
+  const best = findBestMove();
+  if (!best) return;
+
+  best.textContent = "O";
+
+  if (checkWinner()) {
+    gameOverMessage.textContent = "O wins!";
+    gameOverMessage.style.display = "block";
+    window.gameState.gameOver = true;
+    restartButton.style.display = "block";
+    stopTimer();
+
+    const prev = window.scoreO;
+    window.scoreO++;
+    loseSound.play();
+    updateScoreDisplay(window.scoreX, prev);
+    return;
+  }
+
+  if (checkDraw()) {
+    gameOverMessage.textContent = "It's a draw!";
+    gameOverMessage.style.display = "block";
+    window.gameState.gameOver = true;
+    restartButton.style.display = "block";
+    stopTimer();
+    drawSound.play();
+    return;
+  }
+
+  window.gameState.currentPlayer = "X";
 }
 window.computerMove = computerMove;
 
+// ===============================
+// RESTART + RESET
+// ===============================
 function restartGame() {
   window.gameState.currentPlayer = "X";
   window.gameState.gameOver = false;
   gameOverMessage.style.display = "none";
 
-  const cells = getCells();
-  const isDark = document.body.classList.contains("dark-mode");
-  cells.forEach((cell) => {
-    cell.textContent = "";
-    cell.classList.remove("winner");
-    cell.style.transform = "scale(1)";
-    cell.style.transition = "";
+  getCells().forEach(c => {
+    c.textContent = "";
+    c.classList.remove("winner");
   });
+
+  resetTimer();
 }
 window.restartGame = restartGame;
 
@@ -231,61 +287,23 @@ function resetScores() {
 }
 window.resetScores = resetScores;
 
-// Export for Jest/node testing (this must be done after window variables are defined)
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    get gameState() {
-      return window.gameState;
-    },
-    get scoreX() {
-      return window.scoreX;
-    },
-    get scoreO() {
-      return window.scoreO;
-    },
-    get gameMode() {
-      return window.gameMode;
-    },
-    set gameState(val) {
-      window.gameState = val;
-    },
-    set scoreX(val) {
-      window.scoreX = val;
-    },
-    set scoreO(val) {
-      window.scoreO = val;
-    },
-    set gameMode(val) {
-      window.gameMode = val;
-    },
-    getCells,
-    checkWinner,
-    checkDraw,
-    findBestMove,
-    handleCellClick,
-    computerMove,
-    restartGame,
-    resetScores,
-    updateScoreDisplay,
-  };
-}
-
+// ===============================
+// ON LOAD
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   initializeBoard();
 
-  if (restartButton) restartButton.addEventListener("click", restartGame);
-  if (resetButton) resetButton.addEventListener("click", resetScores);
+  restartButton.addEventListener("click", restartGame);
+  resetButton.addEventListener("click", resetScores);
 
-  getCells().forEach((cell) => {
-    cell.addEventListener("click", handleCellClick);
-  });
-
+  // Theme
   if (themeToggle) {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.body.classList.add("dark-mode");
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
       themeToggle.checked = true;
+      document.body.classList.add("dark-mode");
     }
+
     themeToggle.addEventListener("change", () => {
       if (themeToggle.checked) {
         document.body.classList.add("dark-mode");
@@ -294,15 +312,12 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.remove("dark-mode");
         localStorage.setItem("theme", "light");
       }
-      restartGame(); // perbarui gaya cell
     });
   }
 
+  // Mode selection
   if (vsComputerRadio) {
-    // Set initial gameMode based on checked radio
-    if (vsComputerRadio.checked) {
-      window.gameMode = "playerVsComputer";
-    }
+    window.gameMode = "playerVsComputer";
     vsComputerRadio.addEventListener("change", () => {
       window.gameMode = "playerVsComputer";
       resetScores();
@@ -310,15 +325,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (vsPlayerRadio) {
-    // Set initial gameMode based on checked radio
-    if (vsPlayerRadio.checked) {
-      window.gameMode = "playerVsFriend";
-    }
     vsPlayerRadio.addEventListener("change", () => {
       window.gameMode = "playerVsFriend";
       resetScores();
     });
   }
-
-  updateScoreDisplay();
 });
