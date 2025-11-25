@@ -586,8 +586,20 @@ describe("Game UI and State Management Tests", () => {
     jest.spyOn(scriptModule, "checkWinner").mockReturnValue(false); // No winner
     jest.spyOn(scriptModule, "checkDraw").mockReturnValue(true); // But it's a draw
 
+    // Also replace globalNS.findBestMove to ensure computerMove uses the mock
+    const ns = globalThis.__tiny_tactics_ns__ || {};
+    const mockFindBestMove = jest.fn(() => cells[8]);
+    ns.findBestMove = mockFindBestMove;
+    globalThis.__tiny_tactics_ns__ = ns;
+
+    // Also ensure globalNS.findBestMove is set (they should be the same in Jest)
+    if (scriptModule.globalNS) {
+      scriptModule.globalNS.findBestMove = mockFindBestMove;
+    }
+
     scriptModule.gameMode = "playerVsComputer";
     scriptModule.gameState.currentPlayer = "O";
+    scriptModule.gameState.gameOver = false; // Ensure game is not over
 
     scriptModule.computerMove();
     jest.runAllTimers();

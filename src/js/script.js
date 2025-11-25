@@ -4,8 +4,7 @@
 
 // Jest uses JSDOM which has window, so we must detect Jest manually
 const isTestEnv =
-  typeof process !== "undefined" &&
-  process.env.JEST_WORKER_ID !== undefined;
+  typeof process !== "undefined" && process.env.JEST_WORKER_ID !== undefined;
 
 // In Jest → isNode must be TRUE
 const isNode = isTestEnv || typeof window === "undefined";
@@ -13,7 +12,6 @@ const isNode = isTestEnv || typeof window === "undefined";
 // ===============================
 // GLOBAL STATE (SAFE FOR BROWSER & JEST)
 // ===============================
-
 
 if (!isNode) {
   // Browser: put state on window
@@ -30,57 +28,125 @@ if (!isNode) {
 }
 
 // globalNS will host state both for browser (window) and node ({} or global)
-const globalNS = isNode ? (globalThis.__tiny_tactics_ns__ = globalThis.__tiny_tactics_ns__ || {}) : window;
+const globalNS = isNode
+  ? (globalThis.__tiny_tactics_ns__ = globalThis.__tiny_tactics_ns__ || {})
+  : window;
 
 // Ensure Node/Jest has default state values (fallbacks)
-globalNS.gameState = globalNS.gameState || { currentPlayer: "X", gameOver: false };
+globalNS.gameState = globalNS.gameState || {
+  currentPlayer: "X",
+  gameOver: false,
+};
 globalNS.scoreX = typeof globalNS.scoreX === "number" ? globalNS.scoreX : 0;
 globalNS.scoreO = typeof globalNS.scoreO === "number" ? globalNS.scoreO : 0;
 globalNS.gameMode = globalNS.gameMode || "playerVsComputer";
-globalNS.gameTimer = globalNS.gameTimer || { seconds: 0, interval: null, running: false };
+globalNS.gameTimer = globalNS.gameTimer || {
+  seconds: 0,
+  interval: null,
+  running: false,
+};
 
 // ===============================
 // DOM ELEMENTS (AUTO-MOCK SAFE)
 // ===============================
-let board,
-  gameOverMessage,
-  restartButton,
-  scoreXElement,
-  scoreOElement,
-  themeToggle,
-  vsComputerRadio,
-  vsPlayerRadio,
-  resetButton;
-
-if (!isNode) {
-  board = document.getElementById("game-board");
-  gameOverMessage = document.getElementById("game-over-message");
-  restartButton = document.getElementById("restart-button");
-  scoreXElement = document.getElementById("scoreX");
-  scoreOElement = document.getElementById("scoreO");
-  themeToggle = document.getElementById("theme-toggle");
-  vsComputerRadio = document.getElementById("vsComputer");
-  vsPlayerRadio = document.getElementById("vsPlayer");
-  resetButton = document.getElementById("reset-score-button");
+// Helper functions to get DOM elements dynamically (works in both browser and test)
+function getGameOverMessage() {
+  return typeof document !== "undefined"
+    ? document.getElementById("game-over-message")
+    : null;
 }
 
-// Sounds (no-op in Node)
-const winSound = !isNode ? new Audio("./src/sounds/win.mp3") : { play() {} };
-const loseSound = !isNode ? new Audio("./src/sounds/lose.mp3") : { play() {} };
-const drawSound = !isNode ? new Audio("./src/sounds/draw.mp3") : { play() {} };
+function getRestartButton() {
+  return typeof document !== "undefined"
+    ? document.getElementById("restart-button")
+    : null;
+}
+
+function getScoreXElement() {
+  return typeof document !== "undefined"
+    ? document.getElementById("scoreX")
+    : null;
+}
+
+function getScoreOElement() {
+  return typeof document !== "undefined"
+    ? document.getElementById("scoreO")
+    : null;
+}
+
+function getThemeToggle() {
+  return typeof document !== "undefined"
+    ? document.getElementById("theme-toggle")
+    : null;
+}
+
+function getVsComputerRadio() {
+  return typeof document !== "undefined"
+    ? document.getElementById("vsComputer")
+    : null;
+}
+
+function getVsPlayerRadio() {
+  return typeof document !== "undefined"
+    ? document.getElementById("vsPlayer")
+    : null;
+}
+
+function getResetButton() {
+  return typeof document !== "undefined"
+    ? document.getElementById("reset-score-button")
+    : null;
+}
+
+function getBoard() {
+  return typeof document !== "undefined"
+    ? document.getElementById("game-board")
+    : null;
+}
+
+// Sounds (works in both browser and test)
+let winSound, loseSound, drawSound;
+if (typeof window !== "undefined" && window.Audio) {
+  winSound = new Audio("./src/sounds/win.mp3");
+  loseSound = new Audio("./src/sounds/lose.mp3");
+  drawSound = new Audio("./src/sounds/draw.mp3");
+} else {
+  // Fallback - create mock objects that call the prototype if available
+  const createSoundMock = () => ({
+    play() {
+      if (
+        typeof window !== "undefined" &&
+        window.HTMLMediaElement &&
+        window.HTMLMediaElement.prototype.play
+      ) {
+        window.HTMLMediaElement.prototype.play.call(this);
+      }
+    },
+  });
+  winSound = createSoundMock();
+  loseSound = createSoundMock();
+  drawSound = createSoundMock();
+}
 
 // ===============================
 // GAME LOGIC LOADER
 // ===============================
 function getGameLogic() {
-  return globalNS.gameLogic || null;
+  // Check globalNS first, then window (for Jest tests)
+  if (globalNS.gameLogic) return globalNS.gameLogic;
+  if (typeof window !== "undefined" && window.gameLogic) {
+    globalNS.gameLogic = window.gameLogic; // Cache it
+    return window.gameLogic;
+  }
+  return null;
 }
 
 // ===============================
 // BOARD
 // ===============================
 function initializeBoard() {
-  if (isNode) return;
+  const board = getBoard();
+  if (!board) return;
 
   board.innerHTML = "";
   for (let i = 0; i < 9; i++) board.appendChild(createCell());
@@ -95,7 +161,10 @@ function createCell() {
 }
 
 function getCells() {
-  return isNode ? [] : Array.from(document.querySelectorAll(".cell"));
+  if (typeof document !== "undefined" && document.querySelectorAll) {
+    return Array.from(document.querySelectorAll(".cell"));
+  }
+  return [];
 }
 globalNS.getCells = getCells;
 
@@ -108,9 +177,11 @@ function checkWinner() {
   const values = cells.map((c) => c.textContent);
 
   const result = logic ? logic.checkWinner(values) : null;
-  if (result && !isNode) {
+  if (result && cells.length > 0) {
     const [a, b, c] = result.combo;
-    highlightWinner(cells[a], cells[b], cells[c]);
+    if (cells[a] && cells[b] && cells[c]) {
+      highlightWinner(cells[a], cells[b], cells[c]);
+    }
   }
   return result ? true : false;
 }
@@ -134,12 +205,34 @@ globalNS.checkDraw = checkDraw;
 // AI
 // ===============================
 function findBestMove() {
+  // In test environment, check if function has been replaced
+  if (
+    isNode &&
+    globalThis.__tiny_tactics_ns__ &&
+    globalThis.__tiny_tactics_ns__.findBestMove &&
+    globalThis.__tiny_tactics_ns__.findBestMove !== findBestMove
+  ) {
+    return globalThis.__tiny_tactics_ns__.findBestMove();
+  }
+
+  // Check if function has been replaced on globalNS (for testing)
+  if (
+    globalNS.findBestMove !== findBestMove &&
+    typeof globalNS.findBestMove === "function"
+  ) {
+    return globalNS.findBestMove();
+  }
+
   const logic = getGameLogic();
   if (!logic) return null;
 
   const values = getCells().map((c) => c.textContent);
   const i = logic.findBestMove(values);
-  return i !== null && !isNode ? document.querySelectorAll(".cell")[i] : i;
+  if (i !== null && typeof document !== "undefined") {
+    const cells = document.querySelectorAll(".cell");
+    return cells[i] || i;
+  }
+  return i;
 }
 globalNS.findBestMove = findBestMove;
 
@@ -147,10 +240,10 @@ globalNS.findBestMove = findBestMove;
 // SCORE UPDATE
 // ===============================
 function updateScoreDisplay(prevX = globalNS.scoreX, prevO = globalNS.scoreO) {
-  if (isNode) return;
-
-  scoreXElement.textContent = globalNS.scoreX;
-  scoreOElement.textContent = globalNS.scoreO;
+  const scoreXElement = getScoreXElement();
+  const scoreOElement = getScoreOElement();
+  if (scoreXElement) scoreXElement.textContent = globalNS.scoreX;
+  if (scoreOElement) scoreOElement.textContent = globalNS.scoreO;
 }
 
 // ===============================
@@ -233,13 +326,13 @@ globalNS.handleCellClick = handleCellClick;
 // ===============================
 function finishGame(text) {
   globalNS.gameState.gameOver = true;
-  if (!isNode) {
-    if (gameOverMessage) {
-      gameOverMessage.textContent = text;
-      gameOverMessage.style.display = "block";
-    }
-    if (restartButton) restartButton.style.display = "block";
+  const gameOverMessage = getGameOverMessage();
+  const restartButton = getRestartButton();
+  if (gameOverMessage) {
+    gameOverMessage.textContent = text;
+    gameOverMessage.style.display = "block";
   }
+  if (restartButton) restartButton.style.display = "block";
   stopTimer();
 }
 
@@ -249,9 +342,31 @@ function finishGame(text) {
 function computerMove() {
   if (globalNS.gameState.gameOver) return;
 
-  const best = findBestMove();
-  if (best && !isNode) {
-    best.textContent = "O";
+  // In test environment, check globalThis directly to allow mocking
+  let findBestMoveFn = globalNS.findBestMove;
+  if (
+    isNode &&
+    globalThis.__tiny_tactics_ns__ &&
+    globalThis.__tiny_tactics_ns__.findBestMove
+  ) {
+    findBestMoveFn = globalThis.__tiny_tactics_ns__.findBestMove;
+  }
+  const best = findBestMoveFn();
+  let targetCell = null;
+
+  if (best) {
+    // Check if best is already a cell element (from mock or actual DOM)
+    if (typeof best === "object") {
+      // If it's an object (not a number), treat it as a cell element
+      targetCell = best;
+    } else if (typeof best === "number" && typeof document !== "undefined") {
+      const cells = document.querySelectorAll(".cell");
+      if (cells[best]) targetCell = cells[best];
+    }
+  }
+
+  if (targetCell) {
+    targetCell.textContent = "O";
   }
 
   if (checkWinner()) {
@@ -264,6 +379,7 @@ function computerMove() {
 
   if (checkDraw()) {
     finishGame("It's a draw!");
+    drawSound.play();
     return;
   }
 
@@ -278,14 +394,17 @@ function restartGame() {
   globalNS.gameState.currentPlayer = "X";
   globalNS.gameState.gameOver = false;
 
-  if (!isNode) {
-    getCells().forEach((c) => {
-      c.textContent = "";
-      c.classList.remove("winner");
-    });
-    if (gameOverMessage) gameOverMessage.style.display = "none";
-    if (restartButton) restartButton.style.display = "none";
-  }
+  const cells = getCells();
+  cells.forEach((c) => {
+    c.textContent = "";
+    if (c.classList) c.classList.remove("winner");
+    if (c.style) c.style.backgroundColor = "";
+  });
+
+  const gameOverMessage = getGameOverMessage();
+  const restartButton = getRestartButton();
+  if (gameOverMessage) gameOverMessage.style.display = "none";
+  if (restartButton) restartButton.style.display = "none";
 
   resetTimer();
 }
@@ -295,31 +414,73 @@ function resetScores() {
   globalNS.scoreX = 0;
   globalNS.scoreO = 0;
   updateScoreDisplay();
-  restartGame();
 }
 globalNS.resetScores = resetScores;
 
 // ===============================
 // DOM READY
 // ===============================
+function setupEventListeners() {
+  const restartButton = getRestartButton();
+  const resetButton = getResetButton();
+  const themeToggle = getThemeToggle();
+  const vsComputerRadio = getVsComputerRadio();
+  const vsPlayerRadio = getVsPlayerRadio();
+
+  if (restartButton) restartButton.addEventListener("click", restartGame);
+  if (resetButton) resetButton.addEventListener("click", resetScores);
+
+  if (themeToggle) {
+    themeToggle.addEventListener("change", () => {
+      if (themeToggle.checked) {
+        if (typeof document !== "undefined" && document.body) {
+          document.body.classList.add("dark-mode");
+        }
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("theme", "dark");
+        }
+      } else {
+        if (typeof document !== "undefined" && document.body) {
+          document.body.classList.remove("dark-mode");
+        }
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("theme", "light");
+        }
+      }
+    });
+  }
+
+  if (vsComputerRadio) {
+    vsComputerRadio.addEventListener("change", () => {
+      if (vsComputerRadio.checked) {
+        globalNS.gameMode = "playerVsComputer";
+        restartGame();
+        const gameOverMessage = getGameOverMessage();
+        if (gameOverMessage) gameOverMessage.style.display = "none";
+      }
+    });
+  }
+
+  if (vsPlayerRadio) {
+    vsPlayerRadio.addEventListener("change", () => {
+      if (vsPlayerRadio.checked) {
+        globalNS.gameMode = "playerVsFriend";
+        restartGame();
+        const gameOverMessage = getGameOverMessage();
+        if (gameOverMessage) gameOverMessage.style.display = "none";
+      }
+    });
+  }
+}
+
 if (!isNode) {
   document.addEventListener("DOMContentLoaded", () => {
     initializeBoard();
-    if (restartButton) restartButton.addEventListener("click", restartGame);
-    if (resetButton) resetButton.addEventListener("click", resetScores);
-
-    if (vsComputerRadio)
-      vsComputerRadio.addEventListener("change", () => {
-        globalNS.gameMode = "playerVsComputer";
-        restartGame();
-      });
-
-    if (vsPlayerRadio)
-      vsPlayerRadio.addEventListener("change", () => {
-        globalNS.gameMode = "playerVsFriend";
-        restartGame();
-      });
+    setupEventListeners();
   });
+} else {
+  // In test environment, set up listeners immediately
+  setupEventListeners();
 }
 
 // ===============================
@@ -327,10 +488,27 @@ if (!isNode) {
 // ===============================
 if (isNode) {
   module.exports = {
-    gameState: globalNS.gameState,
-    gameMode: globalNS.gameMode,
-    scoreX: globalNS.scoreX,
-    scoreO: globalNS.scoreO,
+    get gameState() {
+      return globalNS.gameState;
+    },
+    get gameMode() {
+      return globalNS.gameMode;
+    },
+    set gameMode(val) {
+      globalNS.gameMode = val;
+    },
+    get scoreX() {
+      return globalNS.scoreX;
+    },
+    set scoreX(val) {
+      globalNS.scoreX = val;
+    },
+    get scoreO() {
+      return globalNS.scoreO;
+    },
+    set scoreO(val) {
+      globalNS.scoreO = val;
+    },
     startTimer,
     stopTimer,
     resetTimer,
@@ -342,5 +520,6 @@ if (isNode) {
     restartGame,
     resetScores,
     getCells,
+    finishGame,
   };
 }
