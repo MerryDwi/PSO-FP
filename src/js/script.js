@@ -291,8 +291,8 @@ function handleCellClick(event) {
   cell.textContent = globalNS.gameState.currentPlayer;
 
   if (checkWinner()) {
-    finishGame(globalNS.gameState.currentPlayer + " wins!");
-    if (globalNS.gameState.currentPlayer === "X") {
+    const winner = globalNS.gameState.currentPlayer;
+    if (winner === "X") {
       globalNS.scoreX++;
       winSound.play();
     } else {
@@ -300,12 +300,13 @@ function handleCellClick(event) {
       loseSound.play();
     }
     updateScoreDisplay();
+    finishGame(winner + " wins!");
     return;
   }
 
   if (checkDraw()) {
-    finishGame("It's a draw!");
     drawSound.play();
+    finishGame("It's a draw!");
     return;
   }
 
@@ -322,6 +323,51 @@ function handleCellClick(event) {
 globalNS.handleCellClick = handleCellClick;
 
 // ===============================
+// SAVE SCORE TO FIRESTORE
+// ===============================
+function saveScoreToFirestore(result) {
+  // Hanya simpan jika mode playerVsComputer
+  if (globalNS.gameMode !== "playerVsComputer") {
+    return;
+  }
+
+  // Cek apakah leaderboardService tersedia
+  if (
+    typeof window === "undefined" ||
+    !window.leaderboardService ||
+    !window.leaderboardService.saveScore
+  ) {
+    console.warn("Leaderboard service belum tersedia");
+    return;
+  }
+
+  // Tentukan result: 'win', 'lose', atau 'draw'
+  let gameResult = "draw";
+  if (result.includes("X wins")) {
+    gameResult = "win";
+  } else if (result.includes("O wins")) {
+    gameResult = "lose";
+  }
+
+  // Simpan score ke Firestore
+  window.leaderboardService
+    .saveScore(
+      globalNS.scoreX,
+      globalNS.scoreO,
+      globalNS.gameTimer.seconds,
+      gameResult
+    )
+    .then((docId) => {
+      if (docId) {
+        console.log("Score berhasil disimpan ke leaderboard");
+      }
+    })
+    .catch((error) => {
+      console.error("Gagal menyimpan score:", error);
+    });
+}
+
+// ===============================
 // FINISH GAME
 // ===============================
 function finishGame(text) {
@@ -334,6 +380,11 @@ function finishGame(text) {
   }
   if (restartButton) restartButton.style.display = "block";
   stopTimer();
+
+  // Simpan score ke Firestore setelah game selesai
+  if (!isNode) {
+    saveScoreToFirestore(text);
+  }
 }
 
 // ===============================
@@ -370,16 +421,16 @@ function computerMove() {
   }
 
   if (checkWinner()) {
-    finishGame("O wins!");
     globalNS.scoreO++;
     loseSound.play();
     updateScoreDisplay();
+    finishGame("O wins!");
     return;
   }
 
   if (checkDraw()) {
-    finishGame("It's a draw!");
     drawSound.play();
+    finishGame("It's a draw!");
     return;
   }
 

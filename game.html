@@ -65,9 +65,50 @@
     <div class="button-group">
       <button id="restart-button" aria-label="Play Again"></button>
       <button id="reset-score-button" aria-label="Reset Score"></button>
+      <button id="leaderboard-button" aria-label="Show Leaderboard">
+        🏆 Leaderboard
+      </button>
     </div>
 
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="leaderboard-modal" style="display: none">
+      <div class="leaderboard-content">
+        <span class="leaderboard-close">&times;</span>
+        <h2>🏆 Leaderboard</h2>
+        <div id="leaderboard-list" class="leaderboard-list">
+          <p>Memuat leaderboard...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
+        authDomain: "pso-fp-ac58a.firebaseapp.com",
+        projectId: "pso-fp-ac58a",
+        storageBucket: "pso-fp-ac58a.firebasestorage.app",
+        messagingSenderId: "571420318582",
+        appId: "1:571420318582:web:96b907cefcda8013323857",
+        measurementId: "G-JVZJ4BZ3E9",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Store globally for leaderboard.js
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+    </script>
+
     <script src="./src/js/gameLogic.js"></script>
+    <script type="module" src="./src/js/leaderboard.js"></script>
     <script src="./src/js/script.js"></script>
     <script>
       window.va =
@@ -85,6 +126,113 @@
         };
     </script>
     <!-- <script defer src="/_vercel/speed-insights/script.js"></script> -->
+    <script>
+      // Leaderboard functionality
+      (function () {
+        const leaderboardButton = document.getElementById("leaderboard-button");
+        const leaderboardModal = document.getElementById("leaderboard-modal");
+        const leaderboardClose = document.querySelector(".leaderboard-close");
+        const leaderboardList = document.getElementById("leaderboard-list");
+
+        function formatTimestamp(timestamp) {
+          if (!timestamp) return "N/A";
+          if (timestamp.toDate) {
+            // Firestore Timestamp
+            const date = timestamp.toDate();
+            return date.toLocaleString("id-ID");
+          }
+          return new Date(timestamp).toLocaleString("id-ID");
+        }
+
+        function formatTime(seconds) {
+          if (!seconds) return "0s";
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        }
+
+        async function loadLeaderboard() {
+          leaderboardList.innerHTML = "<p>Memuat leaderboard...</p>";
+
+          if (!window.leaderboardService) {
+            leaderboardList.innerHTML =
+              "<p>Leaderboard service belum tersedia. Silakan refresh halaman.</p>";
+            return;
+          }
+
+          try {
+            const leaderboard = await window.leaderboardService.getLeaderboard(
+              10
+            );
+
+            if (leaderboard.length === 0) {
+              leaderboardList.innerHTML =
+                "<p>Belum ada data leaderboard. Mainkan game untuk menambahkan score!</p>";
+              return;
+            }
+
+            let html = "";
+            leaderboard.forEach((item, index) => {
+              const rank = index + 1;
+              const email = item.userEmail || "Anonymous";
+              const humanScore = item.humanScore || 0;
+              const computerScore = item.computerScore || 0;
+              const gameTime = formatTime(item.gameTime);
+              const result =
+                item.result === "win"
+                  ? "🏆 Win"
+                  : item.result === "lose"
+                  ? "😔 Lose"
+                  : "🤝 Draw";
+              const timestamp = formatTimestamp(item.timestamp);
+
+              html += `
+                <div class="leaderboard-item">
+                  <div class="leaderboard-item-rank">#${rank}</div>
+                  <div class="leaderboard-item-info">
+                    <div class="leaderboard-item-email">${email}</div>
+                    <div class="leaderboard-item-scores">
+                      Score: ${humanScore} - ${computerScore} | ${result} | Waktu: ${gameTime}
+                    </div>
+                    <div class="leaderboard-item-scores" style="font-size: 12px; color: #999;">
+                      ${timestamp}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            leaderboardList.innerHTML = html;
+          } catch (error) {
+            console.error("Error loading leaderboard:", error);
+            leaderboardList.innerHTML =
+              "<p>Gagal memuat leaderboard. Silakan coba lagi.</p>";
+          }
+        }
+
+        if (leaderboardButton) {
+          leaderboardButton.addEventListener("click", () => {
+            leaderboardModal.style.display = "block";
+            loadLeaderboard();
+          });
+        }
+
+        if (leaderboardClose) {
+          leaderboardClose.addEventListener("click", () => {
+            leaderboardModal.style.display = "none";
+          });
+        }
+
+        // Close modal when clicking outside
+        if (leaderboardModal) {
+          leaderboardModal.addEventListener("click", (e) => {
+            if (e.target === leaderboardModal) {
+              leaderboardModal.style.display = "none";
+            }
+          });
+        }
+      })();
+    </script>
     <script>
       // Theme toggle logic - using existing themeToggle from script.js
       (function () {
