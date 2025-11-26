@@ -299,7 +299,8 @@ function handleCellClick(event) {
 
   // Get cell index
   const board = getBoard();
-  const cellIndex = board ? Array.from(board.children).indexOf(cell) : -1;
+  const cellIndex =
+    board && board.children ? Array.from(board.children).indexOf(cell) : -1;
   const player = globalNS.gameState.currentPlayer;
 
   cell.textContent = player;
@@ -492,9 +493,10 @@ function computerMove() {
 
     // Get cell index and track move
     const board = getBoard();
-    const cellIndex = board
-      ? Array.from(board.children).indexOf(targetCell)
-      : -1;
+    const cellIndex =
+      board && board.children
+        ? Array.from(board.children).indexOf(targetCell)
+        : -1;
 
     // Update board state
     if (globalNS.boardState && cellIndex >= 0) {
