@@ -85,7 +85,17 @@
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        query,
+        orderBy,
+        limit,
+        where,
+        getDocs,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
@@ -105,6 +115,18 @@
       window.firebaseApp = app;
       window.firebaseAuth = auth;
       window.firebaseDb = db;
+
+      // Export Firestore functions untuk leaderboard.js
+      window.firestore = {
+        collection,
+        addDoc,
+        query,
+        orderBy,
+        limit,
+        where,
+        getDocs,
+        serverTimestamp,
+      };
     </script>
 
     <script src="./src/js/gameLogic.js"></script>
@@ -172,19 +194,35 @@
             }
 
             let html = "";
-            leaderboard.forEach((item, index) => {
-              const rank = index + 1;
+            leaderboard.forEach((item) => {
+              const rank = item.rank || 1;
               const email = item.userEmail || "Anonymous";
-              const humanScore = item.humanScore || 0;
-              const computerScore = item.computerScore || 0;
-              const gameTime = formatTime(item.gameTime);
-              const result =
-                item.result === "win"
-                  ? "🏆 Win"
-                  : item.result === "lose"
-                  ? "😔 Lose"
-                  : "🤝 Draw";
-              const timestamp = formatTimestamp(item.timestamp);
+              const totalHumanScore = item.totalHumanScore || 0;
+              const totalComputerScore = item.totalComputerScore || 0;
+              const winCount = item.winCount || 0;
+              const drawCount = item.drawCount || 0;
+              const loseCount = item.loseCount || 0;
+              const gameCount = item.gameCount || 0;
+              const totalGameTime = formatTime(item.totalGameTime || 0);
+
+              // Format waktu rekap (dari session start sampai session end)
+              let sessionTime = "N/A";
+              if (item.sessionStart && item.sessionEnd) {
+                const startTime = item.sessionStart.toDate
+                  ? item.sessionStart.toDate()
+                  : new Date(item.sessionStart);
+                const endTime = item.sessionEnd.toDate
+                  ? item.sessionEnd.toDate()
+                  : new Date(item.sessionEnd);
+                const sessionDuration = Math.floor(
+                  (endTime - startTime) / 1000
+                ); // dalam detik
+                sessionTime = formatTime(sessionDuration);
+              }
+
+              // Format timestamp rekap
+              const sessionStartTime = formatTimestamp(item.sessionStart);
+              const sessionEndTime = formatTimestamp(item.sessionEnd);
 
               html += `
                 <div class="leaderboard-item">
@@ -192,10 +230,13 @@
                   <div class="leaderboard-item-info">
                     <div class="leaderboard-item-email">${email}</div>
                     <div class="leaderboard-item-scores">
-                      Score: ${humanScore} - ${computerScore} | ${result} | Waktu: ${gameTime}
+                      Total Score: ${totalHumanScore} - ${totalComputerScore} | Games: ${gameCount}
                     </div>
-                    <div class="leaderboard-item-scores" style="font-size: 12px; color: #999;">
-                      ${timestamp}
+                    <div class="leaderboard-item-scores" style="margin-top: 4px;">
+                      🏆 Menang: ${winCount} | 🤝 Draw: ${drawCount} | 😔 Kalah: ${loseCount}
+                    </div>
+                    <div class="leaderboard-item-scores" style="font-size: 12px; color: #999; margin-top: 4px;">
+                      Waktu Rekap: ${sessionTime} | Mulai: ${sessionStartTime}
                     </div>
                   </div>
                 </div>

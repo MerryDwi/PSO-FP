@@ -26,6 +26,10 @@ if (!isNode) {
     interval: null,
     running: false,
   };
+
+  // Track game moves and board state
+  window.gameMoves = [];
+  window.boardState = Array(9).fill("");
 }
 
 // globalNS will host state both for browser (window) and node ({} or global)
@@ -48,6 +52,8 @@ globalNS.gameTimer = globalNS.gameTimer || {
   interval: null,
   running: false,
 };
+globalNS.gameMoves = globalNS.gameMoves || [];
+globalNS.boardState = globalNS.boardState || Array(9).fill("");
 
 // ===============================
 // DOM ELEMENTS (AUTO-MOCK SAFE)
@@ -291,7 +297,26 @@ function handleCellClick(event) {
   if (cell.textContent !== "" || globalNS.gameState.gameOver) return;
   startTimer();
 
-  cell.textContent = globalNS.gameState.currentPlayer;
+  // Get cell index
+  const board = getBoard();
+  const cellIndex = board ? Array.from(board.children).indexOf(cell) : -1;
+  const player = globalNS.gameState.currentPlayer;
+
+  cell.textContent = player;
+
+  // Update board state
+  if (globalNS.boardState && cellIndex >= 0) {
+    globalNS.boardState[cellIndex] = player;
+  }
+
+  // Track move
+  if (globalNS.gameMoves && cellIndex >= 0) {
+    globalNS.gameMoves.push({
+      player: player,
+      position: cellIndex,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   if (checkWinner()) {
     const winner = globalNS.gameState.currentPlayer;
@@ -368,14 +393,41 @@ function saveScoreToFirestore(result) {
       globalNS.scoreX,
       globalNS.scoreO,
       globalNS.gameTimer.seconds,
-      gameResult,
-      calculatedScore,
-      winDrawSum
+      gameResult
     )
-
-    .then((docId) => {
+    .then(async (docId) => {
       if (docId) {
         console.log("Score berhasil disimpan ke leaderboard");
+
+        // Simpan game history dengan moves detail
+        if (globalNS.gameMoves && globalNS.gameMoves.length > 0) {
+          await window.leaderboardService.saveGameHistory(
+            globalNS.gameMoves,
+            globalNS.boardState || Array(9).fill(""),
+            docId
+          );
+        }
+
+        // Update user statistics
+        const stats = {
+          totalGames: 1,
+          totalWins: gameResult === "win" ? 1 : 0,
+          totalDraws: gameResult === "draw" ? 1 : 0,
+          totalLosses: gameResult === "lose" ? 1 : 0,
+          bestTime: globalNS.gameTimer.seconds,
+          lastGameTime: globalNS.gameTimer.seconds,
+        };
+        await window.leaderboardService.saveGameStatistics(stats);
+
+        // Simpan user preferences
+        const preferences = {
+          theme:
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("theme") || "light"
+              : "light",
+          gameMode: globalNS.gameMode || "playerVsComputer",
+        };
+        await window.leaderboardService.saveUserPreferences(preferences);
       }
     })
     .catch((error) => {
@@ -409,6 +461,9 @@ function finishGame(text) {
 function computerMove() {
   if (globalNS.gameState.gameOver) return;
 
+  // Track computer move
+  const moveBefore = globalNS.gameMoves ? globalNS.gameMoves.length : 0;
+
   // In test environment, check globalThis directly to allow mocking
   let findBestMoveFn = globalNS.findBestMove;
   if (
@@ -434,6 +489,26 @@ function computerMove() {
 
   if (targetCell) {
     targetCell.textContent = "O";
+
+    // Get cell index and track move
+    const board = getBoard();
+    const cellIndex = board
+      ? Array.from(board.children).indexOf(targetCell)
+      : -1;
+
+    // Update board state
+    if (globalNS.boardState && cellIndex >= 0) {
+      globalNS.boardState[cellIndex] = "O";
+    }
+
+    // Track computer move
+    if (globalNS.gameMoves && cellIndex >= 0) {
+      globalNS.gameMoves.push({
+        player: "O",
+        position: cellIndex,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   if (checkWinner()) {
@@ -462,6 +537,14 @@ function restartGame() {
   globalNS.gameState.currentPlayer = "X";
   globalNS.gameState.gameOver = false;
 
+  // Reset board state and moves
+  if (globalNS.boardState) {
+    globalNS.boardState = Array(9).fill("");
+  }
+  if (globalNS.gameMoves) {
+    globalNS.gameMoves = [];
+  }
+
   const cells = getCells();
   cells.forEach((c) => {
     c.textContent = "";
@@ -482,6 +565,11 @@ function resetScores() {
   globalNS.scoreX = 0;
   globalNS.scoreO = 0;
   updateScoreDisplay();
+
+  // Simpan timestamp reset untuk tracking session
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    localStorage.setItem("scoreResetTimestamp", new Date().toISOString());
+  }
 }
 globalNS.resetScores = resetScores;
 
