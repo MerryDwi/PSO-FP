@@ -18,6 +18,7 @@ if (!isNode) {
   window.gameState = { currentPlayer: "X", gameOver: false };
   window.scoreX = 0;
   window.scoreO = 0;
+  window.scoreDraw = 0;
   window.gameMode = "playerVsComputer";
 
   window.gameTimer = {
@@ -39,6 +40,8 @@ globalNS.gameState = globalNS.gameState || {
 };
 globalNS.scoreX = typeof globalNS.scoreX === "number" ? globalNS.scoreX : 0;
 globalNS.scoreO = typeof globalNS.scoreO === "number" ? globalNS.scoreO : 0;
+globalNS.scoreDraw =
+  typeof globalNS.scoreDraw === "number" ? globalNS.scoreDraw : 0;
 globalNS.gameMode = globalNS.gameMode || "playerVsComputer";
 globalNS.gameTimer = globalNS.gameTimer || {
   seconds: 0,
@@ -305,6 +308,7 @@ function handleCellClick(event) {
   }
 
   if (checkDraw()) {
+    globalNS.scoreDraw++;
     drawSound.play();
     finishGame("It's a draw!");
     return;
@@ -349,14 +353,26 @@ function saveScoreToFirestore(result) {
     gameResult = "lose";
   }
 
+  const currentWins = globalNS.scoreX;
+  const currentDraws = globalNS.scoreDraw;
+
+  // 1. Score = 100 * Total Wins
+  const calculatedScore = currentWins * 100;
+
+  // 2. New Column = Win + Draw
+  const winDrawSum = currentWins + currentDraws;
+
   // Simpan score ke Firestore
   window.leaderboardService
     .saveScore(
       globalNS.scoreX,
       globalNS.scoreO,
       globalNS.gameTimer.seconds,
-      gameResult
+      gameResult,
+      calculatedScore,
+      winDrawSum
     )
+
     .then((docId) => {
       if (docId) {
         console.log("Score berhasil disimpan ke leaderboard");
@@ -429,6 +445,7 @@ function computerMove() {
   }
 
   if (checkDraw()) {
+    globalNS.scoreDraw++;
     drawSound.play();
     finishGame("It's a draw!");
     return;

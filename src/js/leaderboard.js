@@ -89,6 +89,8 @@ async function saveScore(humanScore, computerScore, gameTime, result) {
       computerScore: computerScore,
       gameTime: gameTime,
       result: result, // 'win', 'lose', atau 'draw'
+      totalScore: calculatedScore || humanScore * 100, // Default logic if null
+      winAndDrawCount: winDrawSum || humanScore, // Default logic if null
       timestamp: serverTimestamp(),
       gameMode: "playerVsComputer",
     };
