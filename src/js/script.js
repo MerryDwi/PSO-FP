@@ -670,6 +670,7 @@ if (isNode) {
     startTimer,
     stopTimer,
     resetTimer,
+    updateTimerUI,
     handleCellClick,
     checkWinner,
     checkDraw,
@@ -679,5 +680,33 @@ if (isNode) {
     resetScores,
     getCells,
     finishGame,
+    saveScoreToFirestore,
+    getGameLogic,
+    initializeBoard,
+    createCell,
+    get gameTimer() {
+      return globalNS.gameTimer;
+    },
+    set gameTimer(val) {
+      globalNS.gameTimer = val;
+    },
+    get gameMoves() {
+      return globalNS.gameMoves;
+    },
+    set gameMoves(val) {
+      globalNS.gameMoves = val;
+    },
+    get boardState() {
+      return globalNS.boardState;
+    },
+    set boardState(val) {
+      globalNS.boardState = val;
+    },
+    get scoreDraw() {
+      return globalNS.scoreDraw;
+    },
+    set scoreDraw(val) {
+      globalNS.scoreDraw = val;
+    },
   };
 }

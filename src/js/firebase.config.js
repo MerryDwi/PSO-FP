@@ -1,21 +1,20 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirebaseConfig, getEnvironment } from "./utils/environment.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCXw-mEwyjH9qA5W8jM5W3zSwbXqMhRk",
-  authDomain: "pso-fp-aci5ba.firebaseapp.com",
-  projectId: "pso-fp-aci5ba",
-  storageBucket: "pso-fp-aci5ba.appspot.com",
-  messagingSenderId: "574242918850",
-  appId: "1:574242918850:web:5ab90f7ac913323867",
-  measurementId: "G-JNZL6N4L3S"
-};
+// Get Firebase configuration based on environment
+// This will use production config by default, or development config
+// if environment variables are set via window.env or process.env
+export const firebaseConfig = getFirebaseConfig();
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Get current environment
+export const environment = getEnvironment();
+
+// Initialize Firebase (gunakan existing app jika sudah ada untuk avoid conflicts)
+// This prevents errors if firestoreCRUD.js loads before this file
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+
+// Export app dan analytics untuk penggunaan di file lain
+export { app, analytics };

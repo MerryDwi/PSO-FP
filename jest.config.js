@@ -10,6 +10,9 @@ module.exports = {
     "auth/**/*.js",
     "utils/**/*.js",
     "!src/**/*.test.js",
+    "!src/js/firebase.config.js", // Exclude config file
+    "!src/js/main.js", // Exclude DOM-heavy file (login/signup UI)
+    "!src/js/leaderboard.js", // Exclude Firebase-heavy file (requires complex mocking)
     "!**/node_modules/**",
     "!**/coverage/**",
   ],
