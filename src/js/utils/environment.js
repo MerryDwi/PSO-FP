@@ -16,17 +16,21 @@ export const getEnvironment = () => {
   // Check dari URL (untuk Vercel preview deployments)
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
-    // Vercel preview URLs biasanya mengandung branch name atau hash
-    if (hostname.includes("vercel.app") && !hostname.includes("pso-fp-prod")) {
+    // Localhost => development
+    if (hostname === "localhost" || hostname.startsWith("127.") || hostname.endsWith(".local")) {
       return "development";
     }
-    // Production domain
-    if (
-      hostname.includes("pso-fp-prod") ||
-      hostname === "your-production-domain.com"
-    ) {
-      return "production";
+    // Vercel environment detection: prefer preview as development
+    if (hostname.endsWith("vercel.app")) {
+      // If you have a dedicated production alias, add it here
+      const PROD_ALIASES = ["fp-pso-umber.vercel.app", "pso-fp-prod.vercel.app", "your-production-domain.com"];
+      if (PROD_ALIASES.includes(hostname)) {
+        return "production";
+      }
+      return "development";
     }
+    // Fallback: unknown host treated as production
+    return "production";
   }
 
   // Default untuk Node.js/testing

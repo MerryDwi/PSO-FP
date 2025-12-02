@@ -44,7 +44,14 @@
         if (btn) btn.textContent = label(current);
         // Toggle on click
         btn && btn.addEventListener('click', () => {
-          const next = ((window.env && window.env.VITE_ENV) || 'production') === 'production' ? 'development' : 'production';
+            // Warn if switching while authenticated (session will not carry over across projects)
+            try {
+              const currentUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+              if (currentUser) {
+                alert('Anda sedang login. Mengganti environment akan mengakhiri sesi saat ini. Silakan login kembali setelah switch.');
+              }
+            } catch {}
+            const next = ((window.env && window.env.VITE_ENV) || 'development') === 'production' ? 'development' : 'production';
           window.env = window.env || {};
           window.env.VITE_ENV = next;
           localStorage.setItem('appEnv', next);
