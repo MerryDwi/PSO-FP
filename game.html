@@ -27,7 +27,32 @@
         <input type="checkbox" id="theme-toggle" />
         <span class="slider"></span>
       </label>
+      <button id="env-toggle" style="margin-left: 12px; font-size: 12px; padding: 6px 10px;">Env: dev</button>
     </div>
+    <!-- Minimal ENV toggle: sets window.env.VITE_ENV and reloads -->
+    <script>
+      (function () {
+        // Initialize env from localStorage
+        const savedEnv = localStorage.getItem('appEnv');
+        if (savedEnv) {
+          window.env = window.env || {};
+          window.env.VITE_ENV = savedEnv;
+        }
+        const btn = document.getElementById('env-toggle');
+        function label(env) { return env === 'development' ? 'Env: dev' : 'Env: prod'; }
+        const current = (window.env && window.env.VITE_ENV) || 'development';
+        if (btn) btn.textContent = label(current);
+        // Toggle on click
+        btn && btn.addEventListener('click', () => {
+          const next = ((window.env && window.env.VITE_ENV) || 'production') === 'production' ? 'development' : 'production';
+          window.env = window.env || {};
+          window.env.VITE_ENV = next;
+          localStorage.setItem('appEnv', next);
+          // Reload to re-init Firebase with new config
+          location.reload();
+        });
+      })();
+    </script>
 
     <div id="score-board">
       Player X: <span id="scoreX">0</span> | Player O:
@@ -81,7 +106,7 @@
       </div>
     </div>
 
-    <!-- Firebase Scripts -->
+    <!-- Firebase Scripts (CDN SDK) + Config (local env switch) -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -96,17 +121,9 @@
         getDocs,
         serverTimestamp,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { firebaseConfig, environment } from "./src/js/firebase.browser.config.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
-        authDomain: "pso-fp-ac58a.firebaseapp.com",
-        projectId: "pso-fp-ac58a",
-        storageBucket: "pso-fp-ac58a.firebasestorage.app",
-        messagingSenderId: "571420318582",
-        appId: "1:571420318582:web:96b907cefcda8013323857",
-        measurementId: "G-JVZJ4BZ3E9",
-      };
-
+      // Initialize from environment-aware config
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
@@ -115,6 +132,7 @@
       window.firebaseApp = app;
       window.firebaseAuth = auth;
       window.firebaseDb = db;
+      window.firebaseEnv = environment;
 
       // Export Firestore functions untuk leaderboard.js
       window.firestore = {

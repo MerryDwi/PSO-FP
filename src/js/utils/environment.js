@@ -63,13 +63,13 @@ export const getFirebaseConfig = () => {
 
   // Production config (default)
   const productionConfig = {
-    apiKey: "AIzaSyCXw-mEwyjH9qA5W8jM5W3zSwbXqMhRk",
-    authDomain: "pso-fp-aci5ba.firebaseapp.com",
-    projectId: "pso-fp-aci5ba",
-    storageBucket: "pso-fp-aci5ba.appspot.com",
-    messagingSenderId: "574242918850",
-    appId: "1:574242918850:web:5ab90f7ac913323867",
-    measurementId: "G-JNZL6N4L3S",
+    apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
+    authDomain: "pso-fp-ac58a.firebaseapp.com",
+    projectId: "pso-fp-ac58a",
+    storageBucket: "pso-fp-ac58a.firebasestorage.app",
+    messagingSenderId: "571420318582",
+    appId: "1:571420318582:web:96b907cefcda8013323857",
+    measurementId: "G-JVZJ4BZ3E9",
   };
 
   // Development config (override via window.env atau environment variables)
@@ -77,40 +77,40 @@ export const getFirebaseConfig = () => {
     apiKey:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_API_KEY) ||
       (typeof process !== "undefined" && process.env?.VITE_FIREBASE_API_KEY) ||
-      productionConfig.apiKey, // Fallback to production if not set
+      "AIzaSyBRQaEYKS-erNIpHYkztQ60sJ8dpSO3eVE",
     authDomain:
       (typeof window !== "undefined" &&
         window.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
       (typeof process !== "undefined" &&
         process.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
-      productionConfig.authDomain,
+      "pso-fp-development.firebaseapp.com",
     projectId:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_PROJECT_ID) ||
       (typeof process !== "undefined" &&
         process.env?.VITE_FIREBASE_PROJECT_ID) ||
-      productionConfig.projectId,
+      "pso-fp-development",
     storageBucket:
       (typeof window !== "undefined" &&
         window.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
       (typeof process !== "undefined" &&
         process.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
-      productionConfig.storageBucket,
+      "pso-fp-development.firebasestorage.app",
     messagingSenderId:
       (typeof window !== "undefined" &&
         window.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
       (typeof process !== "undefined" &&
         process.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
-      productionConfig.messagingSenderId,
+      "128319164432",
     appId:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_APP_ID) ||
       (typeof process !== "undefined" && process.env?.VITE_FIREBASE_APP_ID) ||
-      productionConfig.appId,
+      "1:128319164432:web:92ca395dbbfbfdfd287a95",
     measurementId:
       (typeof window !== "undefined" &&
         window.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
       (typeof process !== "undefined" &&
         process.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
-      productionConfig.measurementId,
+      "G-Z7HTWR8CPS",
   };
 
   // Return config based on environment
