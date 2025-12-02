@@ -93,7 +93,10 @@
       <button id="leaderboard-button" aria-label="Show Leaderboard">
         🏆 Leaderboard
       </button>
+      <button id="test-write-button" aria-label="Test Firestore Write">🧪 Test Write</button>
     </div>
+
+    <div id="test-write-result" style="margin: 10px auto; max-width: 640px; font-size: 13px; line-height: 1.4; display:none;"></div>
 
     <!-- Leaderboard Modal -->
     <div id="leaderboard-modal" class="leaderboard-modal" style="display: none">
@@ -145,6 +148,47 @@
         getDocs,
         serverTimestamp,
       };
+
+      // Small test write helper
+      const testBtn = document.getElementById("test-write-button");
+      const resultBox = document.getElementById("test-write-result");
+      if (testBtn) {
+        testBtn.addEventListener("click", async () => {
+          resultBox.style.display = "block";
+          resultBox.textContent = "Running test write...";
+          try {
+            if (!auth || !db) {
+              throw new Error("Firebase belum diinisialisasi (auth/db missing)");
+            }
+            const user = auth.currentUser;
+            if (!user) {
+              throw new Error("User belum login. Silakan login di index.html terlebih dahulu.");
+            }
+            const { collection, addDoc, serverTimestamp } = window.firestore || {};
+            if (!collection || !addDoc || !serverTimestamp) {
+              throw new Error("Firestore functions belum tersedia di window.firestore");
+            }
+            const payload = {
+              userId: user.uid,
+              userEmail: user.email || null,
+              humanScore: 1,
+              computerScore: 0,
+              gameTime: 5,
+              result: "win",
+              timestamp: serverTimestamp(),
+              gameMode: "playerVsComputer",
+              debug: { env: window.firebaseEnv, time: new Date().toISOString() },
+            };
+            const docRef = await addDoc(collection(db, "leaderboard"), payload);
+            resultBox.style.color = "#0a7";
+            resultBox.textContent = `✅ Test write success. Doc ID: ${docRef.id}`;
+          } catch (err) {
+            console.error("Test write error:", err);
+            resultBox.style.color = "#c00";
+            resultBox.textContent = `❌ Test write failed: ${err && err.message ? err.message : err}`;
+          }
+        });
+      }
     </script>
 
     <script src="./src/js/gameLogic.js"></script>
