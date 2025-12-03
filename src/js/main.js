@@ -7,21 +7,17 @@ import {
   setPersistence,
   browserSessionPersistence,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { firebaseConfig, environment } from "./firebase.browser.config.js";
 
-// Konfigurasi Firebase langsung di sini
-const firebaseConfig = {
-  apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
-  authDomain: "pso-fp-ac58a.firebaseapp.com",
-  projectId: "pso-fp-ac58a",
-  storageBucket: "pso-fp-ac58a.firebasestorage.app",
-  messagingSenderId: "571420318582",
-  appId: "1:571420318582:web:96b907cefcda8013323857",
-  measurementId: "G-JVZJ4BZ3E9",
-};
+// Konfigurasi Firebase: gunakan environment-aware config (konsisten dengan game.html)
 
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// Expose untuk konsistensi dan debugging di halaman ini juga
+window.firebaseApp = app;
+window.firebaseAuth = auth;
+window.firebaseEnv = environment;
 
 // Paksa sesi hanya bertahan selama tab terbuka
 setPersistence(auth, browserSessionPersistence).catch((error) => {
