@@ -59,65 +59,50 @@ export const isDevelopment = () => {
  */
 export const getFirebaseConfig = () => {
   const env = getEnvironment();
-  const isProd = env === "production";
-
-  // Production config (default)
-  const productionConfig = {
-    apiKey: "AIzaSyBzMp3CrtlSfDGwsivm_LZQsMYX8BW7Psk",
-    authDomain: "pso-fp-ac58a.firebaseapp.com",
-    projectId: "pso-fp-ac58a",
-    storageBucket: "pso-fp-ac58a.firebasestorage.app",
-    messagingSenderId: "571420318582",
-    appId: "1:571420318582:web:96b907cefcda8013323857",
-    measurementId: "G-JVZJ4BZ3E9",
+  // Unified configuration for both production and development
+  const unifiedConfig = {
+    apiKey: "AIzaSyBRQaEYKS-erNIpHYkztQ60sJ8dpSO3eVE",
+    authDomain: "pso-fp-development.firebaseapp.com",
+    projectId: "pso-fp-development",
+    storageBucket: "pso-fp-development.firebasestorage.app",
+    messagingSenderId: "128319164432",
+    appId: "1:128319164432:web:92ca395dbbfbfdfd287a95",
+    measurementId: "G-Z7HTWR8CPS",
   };
 
-  // Development config (override via window.env atau environment variables)
-  const developmentConfig = {
+  // Allow overrides via env vars if provided (optional)
+  const config = {
     apiKey:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_API_KEY) ||
       (typeof process !== "undefined" && process.env?.VITE_FIREBASE_API_KEY) ||
-      "AIzaSyBRQaEYKS-erNIpHYkztQ60sJ8dpSO3eVE",
+      unifiedConfig.apiKey,
     authDomain:
-      (typeof window !== "undefined" &&
-        window.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
-      (typeof process !== "undefined" &&
-        process.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
-      "pso-fp-development.firebaseapp.com",
+      (typeof window !== "undefined" && window.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
+      (typeof process !== "undefined" && process.env?.VITE_FIREBASE_AUTH_DOMAIN) ||
+      unifiedConfig.authDomain,
     projectId:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_PROJECT_ID) ||
-      (typeof process !== "undefined" &&
-        process.env?.VITE_FIREBASE_PROJECT_ID) ||
-      "pso-fp-development",
+      (typeof process !== "undefined" && process.env?.VITE_FIREBASE_PROJECT_ID) ||
+      unifiedConfig.projectId,
     storageBucket:
-      (typeof window !== "undefined" &&
-        window.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
-      (typeof process !== "undefined" &&
-        process.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
-      "pso-fp-development.firebasestorage.app",
+      (typeof window !== "undefined" && window.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
+      (typeof process !== "undefined" && process.env?.VITE_FIREBASE_STORAGE_BUCKET) ||
+      unifiedConfig.storageBucket,
     messagingSenderId:
-      (typeof window !== "undefined" &&
-        window.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
-      (typeof process !== "undefined" &&
-        process.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
-      "128319164432",
+      (typeof window !== "undefined" && window.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
+      (typeof process !== "undefined" && process.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
+      unifiedConfig.messagingSenderId,
     appId:
       (typeof window !== "undefined" && window.env?.VITE_FIREBASE_APP_ID) ||
       (typeof process !== "undefined" && process.env?.VITE_FIREBASE_APP_ID) ||
-      "1:128319164432:web:92ca395dbbfbfdfd287a95",
+      unifiedConfig.appId,
     measurementId:
-      (typeof window !== "undefined" &&
-        window.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
-      (typeof process !== "undefined" &&
-        process.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
-      "G-Z7HTWR8CPS",
+      (typeof window !== "undefined" && window.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
+      (typeof process !== "undefined" && process.env?.VITE_FIREBASE_MEASUREMENT_ID) ||
+      unifiedConfig.measurementId,
   };
 
-  // Return config based on environment
-  const config = isProd ? productionConfig : developmentConfig;
-
-  // Log environment info (only in development)
-  if (isDevelopment() && typeof console !== "undefined") {
+  if (typeof console !== "undefined") {
     console.log("🔧 Environment:", env);
     console.log("🔧 Firebase Project:", config.projectId);
   }

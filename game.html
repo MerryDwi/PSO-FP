@@ -30,39 +30,7 @@
         <span class="slider"></span>
       </label>
       <button id="env-toggle" style="margin-left: 12px; font-size: 12px; padding: 6px 10px;">Env: dev</button>
-    </div>
     <!-- Minimal ENV toggle: sets window.env.VITE_ENV and reloads -->
-    <script>
-      (function () {
-        // Initialize env from localStorage
-        const savedEnv = localStorage.getItem('appEnv');
-        if (savedEnv) {
-          window.env = window.env || {};
-          window.env.VITE_ENV = savedEnv;
-        }
-        const btn = document.getElementById('env-toggle');
-        function label(env) { return env === 'development' ? 'Env: dev' : 'Env: prod'; }
-        const current = (window.env && window.env.VITE_ENV) || 'development';
-        if (btn) btn.textContent = label(current);
-        // Toggle on click
-        btn && btn.addEventListener('click', () => {
-          const next = ((window.env && window.env.VITE_ENV) || 'production') === 'production' ? 'development' : 'production';
-          window.env = window.env || {};
-          window.env.VITE_ENV = next;
-          localStorage.setItem('appEnv', next);
-          // Reload to re-init Firebase with new config
-          location.reload();
-        });
-      })();
-    </script>
-
-    <div id="score-board">
-      Player X: <span id="scoreX">0</span> | Player O:
-      <span id="scoreO">0</span>
-    </div>
-    <div id="timer">Time: 0s</div>
-
-    <div id="mode-selection">
       <div class="segmented-toggle" id="game-mode-toggle">
         <input
           type="radio"
