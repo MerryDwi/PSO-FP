@@ -19,7 +19,7 @@ Tiny Tactics adalah game papan strategis 3x3 berbasis web yang terinspirasi dari
 - **Tombol Restart & Reset Skor**: Memudahkan untuk memulai ulang permainan atau mengatur ulang skor kapan saja.
 - **Firebase Integration**: Autentikasi user dan penyimpanan data game dengan Firestore.
 - **Leaderboard System**: Sistem ranking berdasarkan score dengan data real-time dari Firestore.
-- **Multi-Environment Support**: Dual Firebase projects (Production & Development) dengan auto-switching berdasarkan environment.
+ - **Environment Support**: Satu Firebase project (development) digunakan untuk semua deployment dengan auto-detection berdasarkan hostname.
 
 ---
 
@@ -45,29 +45,24 @@ Link Aplikasi Live: [https://fp-pso-umber.vercel.app/](https://fp-pso-umber.verc
 
 ---
 
-## 🔥 Firebase Multi-Environment Setup
+## 🔥 Firebase Environment Setup
 
 ### Overview
 
-Proyek ini menggunakan **dual Firebase projects** untuk memisahkan data production dan development:
+Proyek ini menggunakan **satu Firebase project** untuk menyederhanakan konfigurasi dan akses data lintas environment:
 
-| Environment | Firebase Project     | Usage                                    |
-| ----------- | -------------------- | ---------------------------------------- |
-| Production  | `pso-fp-ac58a`       | Production data, deployed dari `main`    |
-| Development | `pso-fp-development` | Development/testing data, dari `develop` |
+| Environment | Firebase Project       | Usage                               |
+| ----------- | ---------------------- | ----------------------------------- |
+| Semua       | `pso-fp-development`   | Digunakan di production & preview   |
 
-### Environment Switching
+### Environment Detection
 
 **Automatic Detection** via `src/js/utils/environment.js`:
 
-- Detects environment dari `window.env.VITE_ENV`, URL hostname, atau `process.env`.
-- Production: domain production atau branch `main`.
-- Development: localhost, preview URLs, atau manual toggle.
-
-**Manual Toggle** (in-app):
-
-- Button "Env: dev/prod" di `game.html` memungkinkan switch manual.
-- Menyimpan preferensi ke `localStorage` dan reload untuk reinitialize Firebase.
+- Detects environment dari URL hostname dan `process.env`.
+- Optional overrides seperti `window.env.VITE_ENV` didukung untuk preview/debug, tanpa tombol UI toggle.
+- Production: domain production atau branch `main` tetap memakai project `pso-fp-development`.
+- Development: localhost dan preview URLs memakai project yang sama.
 
 ### Firebase Configuration Files
 
@@ -105,7 +100,7 @@ Dokumentasi lengkap: `FIRESTORE_CRUD_OPERATIONS.md` dan `FIRESTORE_CRUD_QUICK_RE
 ```
 PSO-FP/
 ├── index.html                      # Halaman Sign In/Sign Up (Firebase Auth)
-├── game.html                       # Halaman utama game dengan environment toggle
+├── game.html                       # Halaman utama game (Firebase via CDN)
 ├── src/
 │   ├── js/
 │   │   ├── script.js              # Logika utama game (UI, event, integrasi logic)
@@ -185,11 +180,11 @@ main (production)
 
 ### Environment & Deployment Mapping
 
-| Branch      | Environment | Vercel Deployment | Firebase Project     |
-| ----------- | ----------- | ----------------- | -------------------- |
-| `main`      | Production  | Production        | `pso-fp-ac58a`       |
-| `develop`   | Development | Preview           | `pso-fp-development` |
-| `feature/*` | Development | Preview           | `pso-fp-development` |
+| Branch      | Environment | Vercel Deployment | Firebase Project       |
+| ----------- | ----------- | ----------------- | ---------------------- |
+| `main`      | Production  | Production        | `pso-fp-development`   |
+| `develop`   | Development | Preview           | `pso-fp-development`   |
+| `feature/*` | Development | Preview           | `pso-fp-development`   |
 
 ### Penjelasan Alur CI/CD:
 
@@ -197,8 +192,8 @@ main (production)
 
    - Desain UI/UX dibuat di Figma.
    - Implementasi fitur dilakukan di VS Code.
-   - Data aplikasi tersimpan di Firebase Database (environment-aware).
-   - Developer dapat switch environment via toggle button di `game.html`.
+   - Data aplikasi tersimpan di Firebase Database (project unified).
+   - Tidak ada toggle environment di UI; detection otomatis berdasarkan hostname.
 
 2. **Continuous Integration (CI)**
 
@@ -353,15 +348,9 @@ python -m http.server 8000
 # Buka browser: http://localhost:8000
 ```
 
-### Environment Switching (In-App)
+### Environment Behavior
 
-Di `game.html`, klik tombol **"Env: dev"** atau **"Env: prod"** di top bar untuk:
-
-- Switch antara Firebase development dan production.
-- Preferensi disimpan di `localStorage` dan persisten antar reload.
-- Otomatis reinitialize Firebase dengan config yang sesuai.
-
-**Default:** Development environment di localhost.
+`game.html` tidak menyediakan tombol untuk mengubah environment. Aplikasi otomatis memilih konfigurasi berdasarkan hostname/deployment. Default untuk localhost adalah development.
 
 ### Menjalankan Tes & Lint
 
@@ -437,15 +426,13 @@ vercel --prod   # Production deployment
 - Branches: `develop`, `feature/*`
 - Vercel: Preview deployments
 - Config: Hardcoded di `src/js/utils/environment.js` dengan env var overrides
-- Toggle: Manual switch via button di `game.html`
 
 **Environment Detection Priority:**
 
-1. Manual toggle (`localStorage.getItem('appEnv')`)
-2. `window.env.VITE_ENV` (dari Vercel env vars atau script injection)
-3. URL hostname detection (Vercel domains)
-4. `process.env.VITE_ENV` (untuk build tools)
-5. Default: `development`
+1. URL hostname detection (Vercel domains)
+2. Optional `window.env.VITE_ENV` (env vars atau script injection)
+3. `process.env.VITE_ENV` (untuk build tools)
+4. Default: `development`
 
 ### Vercel Environment Variables Setup
 
