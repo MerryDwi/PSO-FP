@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="./icon.png" />
     <link rel="stylesheet" href="./src/css/style.css" />
+    <link rel="stylesheet" href="./src/css/leaderboard.css" />
+
     <title>X O Game</title>
   </head>
 
@@ -96,7 +98,7 @@
     </div>
 
     <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="leaderboard-modal" style="display: none">
+    <!-- <div id="leaderboard-modal" class="leaderboard-modal" style="display: none">
       <div class="leaderboard-content">
         <span class="leaderboard-close">&times;</span>
         <h2>🏆 Leaderboard</h2>
@@ -104,8 +106,44 @@
           <p>Memuat leaderboard...</p>
         </div>
       </div>
-    </div>
+    </div> -->
 
+    <div id="leaderboard-full" style="display:none" class="leaderboard-fullscreen">
+      
+      <div class="leaderboard-box">
+
+        <div class="profile-header">
+          <img id="profile-avatar" class="profile-avatar" src="./src/images/default-avatar.png" />
+          <div id="profile-email" class="profile-email">email@gmail.com</div>
+          <div id="profile-rank" class="profile-rank">Leaderboard : 1st</div>
+        </div>
+
+        <div class="top-title">Top Leaderboard</div>
+
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>User</th>
+              <th>Win</th>
+              <th>Lose</th>
+              <th>Draw</th>
+              <th>Time</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+
+          <tbody id="leaderboard-body">
+            <tr><td colspan="7" style="text-align:center;color:white">Loading...</td></tr>
+          </tbody>
+        </table>
+
+        <button id="close-leaderboard" class="logout-btn">Back</button>
+
+      </div>
+    </div>
+    <script src="./src/js/leaderboard-ui.js"></script>
+    
     <!-- Firebase Scripts (CDN SDK) + Config (local env switch) -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -166,7 +204,7 @@
         };
     </script>
     <!-- <script defer src="/_vercel/speed-insights/script.js"></script> -->
-    <script>
+    <!-- <script>
       // Leaderboard functionality
       (function () {
         const leaderboardButton = document.getElementById("leaderboard-button");
@@ -291,7 +329,7 @@
           });
         }
       })();
-    </script>
+    </script> -->
     <script>
       // Theme toggle logic - using existing themeToggle from script.js
       (function () {

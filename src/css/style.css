@@ -596,3 +596,112 @@ body.dark-mode #vsPlayer:checked + label {
 .score-animate {
     animation: score-bounce 0.5s cubic-bezier(.36,1.56,.64,1) both;
 }
+
+/* fullscreen section */
+#leaderboard-view {
+  position: absolute;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  overflow-y:auto;
+  padding-bottom:50px;
+  background:#000;
+  z-index: 99999;
+}
+
+.lb-background {
+  position: fixed;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  background-size:cover;
+  background-position:center;
+  background-image:url("../images/bg-dark.png");
+  z-index:-1;
+}
+
+.lb-logo {
+  display:block;
+  width:260px;
+  margin:40px auto 20px;
+}
+
+.lb-user {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:15px;
+  margin-bottom:10px;
+  color:white;
+}
+
+.lb-avatar {
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  border:4px solid white;
+}
+
+.lb-title-box {
+  width:70%;
+  margin:25px auto;
+  background:rgba(255,255,255,0.2);
+  padding:15px;
+  border-radius:20px;
+  text-align:center;
+  color:white;
+  font-size:22px;
+  font-weight:600;
+}
+
+.lb-table-container {
+  width:75%;
+  margin:auto;
+  background:rgba(255,255,255,0.25);
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.lb-table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+.lb-table th {
+  padding:12px;
+  background:rgba(255,255,255,0.45);
+  color:black;
+  font-weight:700;
+}
+
+.lb-table td {
+  padding:12px;
+  background:rgba(255,255,255,0.3);
+  color:black;
+  text-align:center;
+}
+
+.lb-table tr:nth-child(even) {
+  background:rgba(255,255,255,0.45);
+}
+
+/* Buttons */
+.lb-gray, .lb-logout {
+  display:block;
+  margin:20px auto;
+  padding:12px 30px;
+  border:none;
+  border-radius:12px;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.lb-gray {
+  background:#777;
+  color:white;
+}
+
+.lb-logout {
+  background:#e84c4c;
+  color:white;
+}
