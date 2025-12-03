@@ -214,34 +214,66 @@ globalNS.checkDraw = checkDraw;
 // AI
 // ===============================
 function findBestMove() {
-  // In test environment, check if function has been replaced
-  if (
-    isNode &&
-    globalThis.__tiny_tactics_ns__ &&
-    globalThis.__tiny_tactics_ns__.findBestMove &&
-    globalThis.__tiny_tactics_ns__.findBestMove !== findBestMove
-  ) {
-    return globalThis.__tiny_tactics_ns__.findBestMove();
+  // Implementasi heuristic AI sederhana sesuai permintaan
+  const currentCells = getCells();
+  const availableMoves = currentCells
+    .map((cell, index) => (cell.textContent === "" ? index : null))
+    .filter((index) => index !== null);
+
+  const checkWinnerForMinimax = (board, player) => {
+    const winCombinations = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    return winCombinations.some(
+      ([a, b, c]) => board[a] === player && board[b] === player && board[c] === player
+    );
+  };
+
+  if (availableMoves.length === 0) return null;
+
+  // 1) Menang jika bisa
+  for (const move of availableMoves) {
+    const temp = currentCells.map((c) => c.textContent);
+    temp[move] = "O";
+    if (checkWinnerForMinimax(temp, "O")) return currentCells[move];
   }
 
-  // Check if function has been replaced on globalNS (for testing)
-  if (
-    globalNS.findBestMove !== findBestMove &&
-    typeof globalNS.findBestMove === "function"
-  ) {
-    return globalNS.findBestMove();
+  // 2) Blokir kemenangan lawan
+  for (const move of availableMoves) {
+    const temp = currentCells.map((c) => c.textContent);
+    temp[move] = "X";
+    if (checkWinnerForMinimax(temp, "X")) return currentCells[move];
   }
 
-  const logic = getGameLogic();
-  if (!logic) return null;
+  // 3) Ambil center jika kosong
+  if (currentCells[4] && currentCells[4].textContent === "") return currentCells[4];
 
-  const values = getCells().map((c) => c.textContent);
-  const i = logic.findBestMove(values);
-  if (i !== null && typeof document !== "undefined") {
-    const cells = document.querySelectorAll(".cell");
-    return cells[i] || i;
+  // 4) Ambil corner acak jika tersedia
+  const corners = [0, 2, 6, 8];
+  const availableCorners = corners.filter((i) => currentCells[i] && currentCells[i].textContent === "");
+  if (availableCorners.length > 0) {
+    const choice = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+    return currentCells[choice];
   }
-  return i;
+
+  // 5) Ambil edge acak jika tersedia
+  const edges = [1, 3, 5, 7];
+  const availableEdges = edges.filter((i) => currentCells[i] && currentCells[i].textContent === "");
+  if (availableEdges.length > 0) {
+    const choice = availableEdges[Math.floor(Math.random() * availableEdges.length)];
+    return currentCells[choice];
+  }
+
+  // 6) Fallback: pilih dari availableMoves secara acak
+  const rand = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+  return currentCells[rand];
 }
 globalNS.findBestMove = findBestMove;
 
