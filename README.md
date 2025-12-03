@@ -19,7 +19,7 @@ Tiny Tactics adalah game papan strategis 3x3 berbasis web yang terinspirasi dari
 - **Tombol Restart & Reset Skor**: Memudahkan untuk memulai ulang permainan atau mengatur ulang skor kapan saja.
 - **Firebase Integration**: Autentikasi user dan penyimpanan data game dengan Firestore.
 - **Leaderboard System**: Sistem ranking berdasarkan score dengan data real-time dari Firestore.
-- **Multi-Environment Support**: Dual Firebase projects (Production & Development) dengan auto-switching berdasarkan environment.
+- **Environment Support**: Satu Firebase project (development) untuk semua deployment dengan auto-detection.
 
 ---
 
@@ -27,47 +27,44 @@ Tiny Tactics adalah game papan strategis 3x3 berbasis web yang terinspirasi dari
 
 Proyek ini mengadopsi serangkaian alat modern untuk mengotomatisasi dan menyederhanakan pengembangan, pengujian, deployment, dan pemantauan.
 
-| Kategori           | Alat                              | Deskripsi                                                                                                          |
-| :----------------- | :-------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
-| Pengembangan       | Visual Studio Code (VS Code)      | Editor utama untuk fleksibilitas dan ekosistem ekstensinya.                                                        |
-| Backend/Database   | Firebase (Firestore + Auth)       | Backend-as-a-Service untuk autentikasi user dan database real-time dengan dual-environment setup (prod & dev).     |
-| Versi Kontrol      | GitHub                            | Pusat manajemen kode sumber, pelacakan, dan _code review_ dengan branching strategy (main/develop).                |
-| CI/CD              | GitHub Actions                    | Mengotomatiskan Continuous Integration/Continuous Deployment dengan pipeline terpisah untuk lint, test, dan QA.    |
-| Kualitas Kode      | ESLint                            | Memastikan kualitas dan keamanan kode JavaScript melalui analisis statis. SonarCloud (disabled - belum ada token). |
-| Pengujian          | Jest (dengan Coverage)            | Menyediakan pengujian unit yang cepat dan tangguh untuk logika game, AI, dan perilaku UI dengan laporan coverage.  |
-| Keamanan           | npm audit                         | Memindai kerentanan ketergantungan dengan tingkat audit tinggi. Snyk (disabled - belum ada token).                 |
-| Code Coverage      | Jest Coverage, Codecov            | Pelacakan dan pelaporan code coverage dengan threshold minimum 50% (disesuaikan dengan coverage saat ini).         |
-| Deployment         | Vercel                            | Platform hosting untuk aplikasi _front-end_ dengan deployment otomatis per branch.                                 |
-| Monitoring         | Vercel Analytics & Speed Insights | Skrip tersemat untuk metrik kinerja dan penggunaan _real-time_.                                                    |
-| Environment Config | Multi-Env Switcher                | Automatic environment detection dengan manual toggle untuk switch antara production/development Firebase.          |
+| Kategori           | Alat                              | Deskripsi                                                                                                           |
+| :----------------- | :-------------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| Pengembangan       | Visual Studio Code (VS Code)      | Editor utama untuk fleksibilitas dan ekosistem ekstensinya.                                                         |
+| Backend/Database   | Firebase (Firestore + Auth)       | Backend-as-a-Service untuk autentikasi user dan database real-time dengan dual-environment setup (prod & dev).      |
+| Versi Kontrol      | GitHub                            | Pusat manajemen kode sumber, pelacakan, dan _code review_ dengan branching strategy (main/develop).                 |
+| CI/CD              | GitHub Actions                    | Mengotomatiskan Continuous Integration/Continuous Deployment dengan pipeline terpisah untuk lint, test, dan QA.     |
+| Kualitas Kode      | ESLint, SonarCloud                | ESLint untuk analisis statis; SonarCloud aktif untuk Quality Gate (Bugs, Code Smells, Coverage, Security Hotspots). |
+| Pengujian          | Jest (dengan Coverage)            | Menyediakan pengujian unit yang cepat dan tangguh untuk logika game, AI, dan perilaku UI dengan laporan coverage.   |
+| Keamanan           | npm audit                         | Memindai kerentanan ketergantungan dengan tingkat audit tinggi. Snyk (disabled - belum ada token).                  |
+| Code Coverage      | Jest Coverage, Codecov            | Pelacakan dan pelaporan code coverage dengan threshold minimum 50% (disesuaikan dengan coverage saat ini).          |
+| Deployment         | Vercel                            | Platform hosting untuk aplikasi _front-end_ dengan deployment otomatis per branch.                                  |
+| Monitoring         | Vercel Analytics & Speed Insights | Skrip tersemat untuk metrik kinerja dan penggunaan _real-time_.                                                     |
+| Code Quality Dash  | SonarCloud Dashboard              | Laporan kualitas kode & coverage real-time; terhubung ke GitHub PRs.                                                |
+| Environment Config | Multi-Env Switcher                | Automatic environment detection dengan manual toggle untuk switch antara production/development Firebase.           |
 
 Link Aplikasi Live: [https://fp-pso-umber.vercel.app/](https://fp-pso-umber.vercel.app/)
+SonarCloud: [Project Dashboard](https://sonarcloud.io/project/overview?id=MerryDwi_PSO-FP)
+Status Deployment: Production dan Preview di Vercel aktif.
 
 ---
 
-## 🔥 Firebase Multi-Environment Setup
+## 🔥 Firebase Environment Setup
 
 ### Overview
 
-Proyek ini menggunakan **dual Firebase projects** untuk memisahkan data production dan development:
+Proyek ini menggunakan **satu Firebase project** untuk menyederhanakan konfigurasi:
 
-| Environment | Firebase Project     | Usage                                    |
-| ----------- | -------------------- | ---------------------------------------- |
-| Production  | `pso-fp-ac58a`       | Production data, deployed dari `main`    |
-| Development | `pso-fp-development` | Development/testing data, dari `develop` |
+| Environment | Firebase Project     | Usage                             |
+| ----------- | -------------------- | --------------------------------- |
+| Semua       | `pso-fp-development` | Digunakan di production & preview |
 
-### Environment Switching
+### Environment Detection
 
 **Automatic Detection** via `src/js/utils/environment.js`:
 
-- Detects environment dari `window.env.VITE_ENV`, URL hostname, atau `process.env`.
-- Production: domain production atau branch `main`.
-- Development: localhost, preview URLs, atau manual toggle.
-
-**Manual Toggle** (in-app):
-
-- Button "Env: dev/prod" di `game.html` memungkinkan switch manual.
-- Menyimpan preferensi ke `localStorage` dan reload untuk reinitialize Firebase.
+- Detects environment dari URL hostname dan `process.env`.
+- Optional overrides seperti `window.env.VITE_ENV` didukung untuk preview/debug, tanpa tombol UI toggle.
+- Production & Development memakai project yang sama (`pso-fp-development`).
 
 ### Firebase Configuration Files
 
@@ -105,7 +102,7 @@ Dokumentasi lengkap: `FIRESTORE_CRUD_OPERATIONS.md` dan `FIRESTORE_CRUD_QUICK_RE
 ```
 PSO-FP/
 ├── index.html                      # Halaman Sign In/Sign Up (Firebase Auth)
-├── game.html                       # Halaman utama game dengan environment toggle
+├── game.html                       # Halaman utama game (Firebase via CDN; tanpa env toggle)
 ├── src/
 │   ├── js/
 │   │   ├── script.js              # Logika utama game (UI, event, integrasi logic)
@@ -140,7 +137,7 @@ PSO-FP/
 ├── coverage/                      # Coverage reports (generated)
 ├── scripts/
 │   └── inject-env.js              # Environment variable injection script
-├── sonar-project.properties       # SonarCloud config (disabled)
+├── sonar-project.properties       # SonarCloud config (aktif)
 ├── package.json                   # Dependencies & scripts
 ├── eslint.config.mjs              # ESLint configuration
 ├── babel.config.js                # Babel configuration
