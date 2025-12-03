@@ -4,19 +4,19 @@ on:
   push:
     branches:
       - main
-      - Feat--**
-      - fitur-**
-      - Security
-      - logo
-      - sounds
+      - "feat-*"
+      - "fitur-*"
+      - "security"
+      - "logo"
+      - "sounds"
   pull_request:
     branches:
       - main
-      - Feat--**
-      - fitur-**
-      - Security
-      - logo
-      - sounds
+      - "feat-*"
+      - "fitur-*"
+      - "security"
+      - "logo"
+      - "sounds"
 
 jobs:
   lint:
@@ -26,7 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Shallow clones should be disabled for better analysis
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -41,107 +41,55 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true
 
-      - name: Make ESLint executable
-        run: chmod +x ./node_modules/.bin/eslint
-
       - name: Run ESLint
         run: npm run lint
 
   test:
-    name: Run Unit Tests with Coverage
+    name: Unit Tests + Coverage
     runs-on: ubuntu-latest
     needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run Tests with Coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-coverage
+          fail_ci_if_error: false
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: test
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Shallow clones should be disabled for better analysis
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Make Jest executable
-        run: chmod +x ./node_modules/.bin/jest
-
-      - name: Run Tests with Coverage
-        run: npm run test:coverage
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/coverage-final.json
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-  # SonarCloud job - DISABLED: Uncomment when SONAR_TOKEN is available
-  # To enable: Add SONAR_TOKEN to GitHub Secrets and update sonar-project.properties with your org/project keys
-  # sonarcloud:
-  #   name: SonarCloud Analysis
-  #   runs-on: ubuntu-latest
-  #   needs: [lint, test]
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0 # Shallow clones should be disabled for better analysis
-  #
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "18"
-  #         cache: "npm"
-  #
-  #     - name: Install dependencies
-  #       run: npm ci
-  #
-  #     - name: Run tests with coverage
-  #       run: npm run test:coverage
-  #       env:
-  #         CI: true
-  #
-  #     - name: SonarCloud Scan
-  #       uses: SonarSource/sonarcloud-github-action@master
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #       with:
-  #         projectBaseDir: .
-  #       continue-on-error: true
-
-  # Security scan job (Snyk) - DISABLED: Uncomment when SNYK_TOKEN is available
-  # To enable: Add SNYK_TOKEN to GitHub Secrets
-  # security-scan:
-  #   name: Security Vulnerability Scan
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "18"
-  #         cache: "npm"
-  #
-  #     - name: Install dependencies
-  #       run: npm ci
-  #
-  #     - name: Run Snyk to check for vulnerabilities
-  #       uses: snyk/actions/node@master
-  #       continue-on-error: true
-  #       env:
-  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-  #       with:
-  #         args: --severity-threshold=high
-  #
-  #     - name: Upload Snyk results to GitHub Security
-  #       uses: github/codeql-action/upload-sarif@v3
-  #       if: always()
-  #       continue-on-error: true
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
