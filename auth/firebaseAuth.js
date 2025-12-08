@@ -1,19 +1,15 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
 } from "firebase/auth";
+import { getFirebaseConfig } from "../utils/environment.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCXw-mEwyjH9qA5W8jM5W3zSwbXqMhRk",
-  authDomain: "pso-fp-aci5ba.firebaseapp.com",
-  projectId: "pso-fp-aci5ba",
-  storageBucket: "pso-fp-aci5ba.appspot.com",
-  messagingSenderId: "574242918850",
-  appId: "1:574242918850:web:5ab90f7ac913323867",
-};
+// Load config dari .env (AMAN)
+const firebaseConfig = getFirebaseConfig();
 
+// Prevent duplicate initialization
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
@@ -43,4 +39,3 @@ export const signUp = async (email, password) => {
     throw mapFirebaseError(error);
   }
 };
-
