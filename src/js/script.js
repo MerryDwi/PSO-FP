@@ -2,11 +2,8 @@
 // FIX FOR JEST ENVIRONMENT
 // ===============================
 
-// Jest uses JSDOM which has window, so we must detect Jest manually
 const isTestEnv =
   typeof process !== "undefined" && process.env.JEST_WORKER_ID !== undefined;
-
-// In Jest → isNode must be TRUE
 const isNode = isTestEnv || typeof window === "undefined";
 
 // ===============================
@@ -14,30 +11,23 @@ const isNode = isTestEnv || typeof window === "undefined";
 // ===============================
 
 if (!isNode) {
-  // Browser: put state on window
   window.gameState = { currentPlayer: "X", gameOver: false };
   window.scoreX = 0;
   window.scoreO = 0;
   window.scoreDraw = 0;
   window.gameMode = "playerVsComputer";
 
-  window.gameTimer = {
-    seconds: 0,
-    interval: null,
-    running: false,
-  };
-
   // Track game moves and board state
   window.gameMoves = [];
   window.boardState = Array(9).fill("");
+  
+  // REMOVED: OLD timer system - now use window.gameTimer from game.html
 }
 
-// globalNS will host state both for browser (window) and node ({} or global)
 const globalNS = isNode
   ? (globalThis.__tiny_tactics_ns__ = globalThis.__tiny_tactics_ns__ || {})
   : window;
 
-// Ensure Node/Jest has default state values (fallbacks)
 globalNS.gameState = globalNS.gameState || {
   currentPlayer: "X",
   gameOver: false,
@@ -47,18 +37,12 @@ globalNS.scoreO = typeof globalNS.scoreO === "number" ? globalNS.scoreO : 0;
 globalNS.scoreDraw =
   typeof globalNS.scoreDraw === "number" ? globalNS.scoreDraw : 0;
 globalNS.gameMode = globalNS.gameMode || "playerVsComputer";
-globalNS.gameTimer = globalNS.gameTimer || {
-  seconds: 0,
-  interval: null,
-  running: false,
-};
 globalNS.gameMoves = globalNS.gameMoves || [];
 globalNS.boardState = globalNS.boardState || Array(9).fill("");
 
 // ===============================
 // DOM ELEMENTS (AUTO-MOCK SAFE)
 // ===============================
-// Helper functions to get DOM elements dynamically (works in both browser and test)
 function getGameOverMessage() {
   return typeof document !== "undefined"
     ? document.getElementById("game-over-message")
@@ -113,14 +97,13 @@ function getBoard() {
     : null;
 }
 
-// Sounds (works in both browser and test)
+// Sounds
 let winSound, loseSound, drawSound;
 if (typeof window !== "undefined" && window.Audio) {
   winSound = new Audio("./src/sounds/win.mp3");
   loseSound = new Audio("./src/sounds/lose.mp3");
   drawSound = new Audio("./src/sounds/draw.mp3");
 } else {
-  // Fallback - create mock objects that call the prototype if available
   const createSoundMock = () => ({
     play() {
       if (
@@ -141,10 +124,9 @@ if (typeof window !== "undefined" && window.Audio) {
 // GAME LOGIC LOADER
 // ===============================
 function getGameLogic() {
-  // Check globalNS first, then window (for Jest tests)
   if (globalNS.gameLogic) return globalNS.gameLogic;
   if (typeof window !== "undefined" && window.gameLogic) {
-    globalNS.gameLogic = window.gameLogic; // Cache it
+    globalNS.gameLogic = window.gameLogic;
     return window.gameLogic;
   }
   return null;
@@ -214,7 +196,6 @@ globalNS.checkDraw = checkDraw;
 // AI
 // ===============================
 function findBestMove() {
-  // Implementasi heuristic AI sederhana sesuai permintaan
   const currentCells = getCells();
   const availableMoves = currentCells
     .map((cell, index) => (cell.textContent === "" ? index : null))
@@ -255,7 +236,7 @@ function findBestMove() {
   // 3) Ambil center jika kosong
   if (currentCells[4] && currentCells[4].textContent === "") return currentCells[4];
 
-  // 4) Ambil corner acak jika tersedia
+  // 4) Ambil corner acak
   const corners = [0, 2, 6, 8];
   const availableCorners = corners.filter((i) => currentCells[i] && currentCells[i].textContent === "");
   if (availableCorners.length > 0) {
@@ -263,7 +244,7 @@ function findBestMove() {
     return currentCells[choice];
   }
 
-  // 5) Ambil edge acak jika tersedia
+  // 5) Ambil edge acak
   const edges = [1, 3, 5, 7];
   const availableEdges = edges.filter((i) => currentCells[i] && currentCells[i].textContent === "");
   if (availableEdges.length > 0) {
@@ -271,7 +252,7 @@ function findBestMove() {
     return currentCells[choice];
   }
 
-  // 6) Fallback: pilih dari availableMoves secara acak
+  // 6) Fallback
   const rand = availableMoves[Math.floor(Math.random() * availableMoves.length)];
   return currentCells[rand];
 }
@@ -288,35 +269,39 @@ function updateScoreDisplay(prevX = globalNS.scoreX, prevO = globalNS.scoreO) {
 }
 
 // ===============================
-// TIMER
+// TIMER FUNCTIONS (USE FROM game.html)
 // ===============================
 function startTimer() {
   if (isNode) return;
-  if (globalNS.gameTimer.running) return;
-  globalNS.gameTimer.running = true;
-  globalNS.gameTimer.interval = setInterval(() => {
-    globalNS.gameTimer.seconds++;
-    updateTimerUI();
-  }, 1000);
+  // Use timer from game.html
+  if (window.gameTimer && window.gameTimer.start) {
+    window.gameTimer.start();
+  }
 }
 
 function stopTimer() {
   if (isNode) return;
-  clearInterval(globalNS.gameTimer.interval);
-  globalNS.gameTimer.running = false;
+  // Use timer from game.html
+  if (window.gameTimer && window.gameTimer.stop) {
+    window.gameTimer.stop();
+  }
 }
 
 function resetTimer() {
   if (isNode) return;
-  stopTimer();
-  globalNS.gameTimer.seconds = 0;
-  updateTimerUI();
+  // Use timer from game.html
+  if (window.gameTimer && window.gameTimer.reset) {
+    window.gameTimer.reset();
+  }
 }
 
-function updateTimerUI() {
-  if (isNode) return;
-  const t = document.getElementById("timer");
-  if (t) t.textContent = "Time: " + globalNS.gameTimer.seconds + "s";
+function getElapsedTime() {
+  if (isNode) return 0;
+  // Get elapsed time from game.html timer
+  if (window.gameTimer && window.gameTimer.getElapsedTime) {
+    return window.gameTimer.getElapsedTime();
+  }
+  return 0;
 }
 
 // ===============================
@@ -327,9 +312,10 @@ function handleCellClick(event) {
   if (!cell) return;
 
   if (cell.textContent !== "" || globalNS.gameState.gameOver) return;
+  
+  // Start timer on first move
   startTimer();
 
-  // Get cell index
   const board = getBoard();
   const cellIndex =
     board && board.children ? Array.from(board.children).indexOf(cell) : -1;
@@ -337,12 +323,10 @@ function handleCellClick(event) {
 
   cell.textContent = player;
 
-  // Update board state
   if (globalNS.boardState && cellIndex >= 0) {
     globalNS.boardState[cellIndex] = player;
   }
 
-  // Track move
   if (globalNS.gameMoves && cellIndex >= 0) {
     globalNS.gameMoves.push({
       player: player,
@@ -388,12 +372,10 @@ globalNS.handleCellClick = handleCellClick;
 // SAVE SCORE TO FIRESTORE
 // ===============================
 function saveScoreToFirestore(result) {
-  // Hanya simpan jika mode playerVsComputer
   if (globalNS.gameMode !== "playerVsComputer") {
     return;
   }
 
-  // Cek apakah leaderboardService tersedia
   if (
     typeof window === "undefined" ||
     !window.leaderboardService ||
@@ -403,7 +385,6 @@ function saveScoreToFirestore(result) {
     return;
   }
 
-  // Tentukan result: 'win', 'lose', atau 'draw'
   let gameResult = "draw";
   if (result.includes("X wins")) {
     gameResult = "win";
@@ -411,28 +392,20 @@ function saveScoreToFirestore(result) {
     gameResult = "lose";
   }
 
-  const currentWins = globalNS.scoreX;
-  const currentDraws = globalNS.scoreDraw;
+  // Get elapsed time from timer
+  const gameTime = getElapsedTime();
 
-  // 1. Score = 100 * Total Wins
-  const calculatedScore = currentWins * 100;
-
-  // 2. New Column = Win + Draw
-  const winDrawSum = currentWins + currentDraws;
-
-  // Simpan score ke Firestore
   window.leaderboardService
     .saveScore(
       globalNS.scoreX,
       globalNS.scoreO,
-      globalNS.gameTimer.seconds,
+      gameTime, // Use elapsed time from timer
       gameResult
     )
     .then(async (docId) => {
       if (docId) {
         console.log("Score berhasil disimpan ke leaderboard");
 
-        // Simpan game history dengan moves detail
         if (globalNS.gameMoves && globalNS.gameMoves.length > 0) {
           await window.leaderboardService.saveGameHistory(
             globalNS.gameMoves,
@@ -441,18 +414,16 @@ function saveScoreToFirestore(result) {
           );
         }
 
-        // Update user statistics
         const stats = {
           totalGames: 1,
           totalWins: gameResult === "win" ? 1 : 0,
           totalDraws: gameResult === "draw" ? 1 : 0,
           totalLosses: gameResult === "lose" ? 1 : 0,
-          bestTime: globalNS.gameTimer.seconds,
-          lastGameTime: globalNS.gameTimer.seconds,
+          bestTime: gameTime,
+          lastGameTime: gameTime,
         };
         await window.leaderboardService.saveGameStatistics(stats);
 
-        // Simpan user preferences
         const preferences = {
           theme:
             typeof localStorage !== "undefined"
@@ -480,9 +451,10 @@ function finishGame(text) {
     gameOverMessage.style.display = "block";
   }
   if (restartButton) restartButton.style.display = "block";
+  
+  // Stop timer
   stopTimer();
 
-  // Simpan score ke Firestore setelah game selesai
   if (!isNode) {
     saveScoreToFirestore(text);
   }
@@ -494,10 +466,6 @@ function finishGame(text) {
 function computerMove() {
   if (globalNS.gameState.gameOver) return;
 
-  // Track computer move
-  const moveBefore = globalNS.gameMoves ? globalNS.gameMoves.length : 0;
-
-  // In test environment, check globalThis directly to allow mocking
   let findBestMoveFn = globalNS.findBestMove;
   if (
     isNode &&
@@ -510,9 +478,7 @@ function computerMove() {
   let targetCell = null;
 
   if (best) {
-    // Check if best is already a cell element (from mock or actual DOM)
     if (typeof best === "object") {
-      // If it's an object (not a number), treat it as a cell element
       targetCell = best;
     } else if (typeof best === "number" && typeof document !== "undefined") {
       const cells = document.querySelectorAll(".cell");
@@ -523,19 +489,16 @@ function computerMove() {
   if (targetCell) {
     targetCell.textContent = "O";
 
-    // Get cell index and track move
     const board = getBoard();
     const cellIndex =
       board && board.children
         ? Array.from(board.children).indexOf(targetCell)
         : -1;
 
-    // Update board state
     if (globalNS.boardState && cellIndex >= 0) {
       globalNS.boardState[cellIndex] = "O";
     }
 
-    // Track computer move
     if (globalNS.gameMoves && cellIndex >= 0) {
       globalNS.gameMoves.push({
         player: "O",
@@ -571,7 +534,6 @@ function restartGame() {
   globalNS.gameState.currentPlayer = "X";
   globalNS.gameState.gameOver = false;
 
-  // Reset board state and moves
   if (globalNS.boardState) {
     globalNS.boardState = Array(9).fill("");
   }
@@ -591,6 +553,7 @@ function restartGame() {
   if (gameOverMessage) gameOverMessage.style.display = "none";
   if (restartButton) restartButton.style.display = "none";
 
+  // Reset timer
   resetTimer();
 }
 globalNS.restartGame = restartGame;
@@ -600,7 +563,6 @@ function resetScores() {
   globalNS.scoreO = 0;
   updateScoreDisplay();
 
-  // Simpan timestamp reset untuk tracking session
   if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
     localStorage.setItem("scoreResetTimestamp", new Date().toISOString());
   }
@@ -669,7 +631,6 @@ if (!isNode) {
     setupEventListeners();
   });
 } else {
-  // In test environment, set up listeners immediately
   setupEventListeners();
 }
 
@@ -702,7 +663,6 @@ if (isNode) {
     startTimer,
     stopTimer,
     resetTimer,
-    updateTimerUI,
     handleCellClick,
     checkWinner,
     checkDraw,
@@ -716,12 +676,7 @@ if (isNode) {
     getGameLogic,
     initializeBoard,
     createCell,
-    get gameTimer() {
-      return globalNS.gameTimer;
-    },
-    set gameTimer(val) {
-      globalNS.gameTimer = val;
-    },
+    getElapsedTime,
     get gameMoves() {
       return globalNS.gameMoves;
     },
@@ -742,4 +697,3 @@ if (isNode) {
     },
   };
 }
-

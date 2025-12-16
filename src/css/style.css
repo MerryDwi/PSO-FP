@@ -705,3 +705,271 @@ body.dark-mode #vsPlayer:checked + label {
   background:#e84c4c;
   color:white;
 }
+
+
+
+/* Toggle dark/light mode dan timer di pojok kanan atas */
+.theme-toggle-wrapper {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Timer display styling */
+.timer-display {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #2b4da0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 80px;
+  justify-content: center;
+}
+
+/* Dark mode timer styling */
+body.dark-mode .timer-display {
+  background: rgba(30, 42, 85, 0.9);
+  color: #ffffff;
+}
+
+/* Wrapper untuk game mode toggle - posisi center di bawah logo */
+.game-mode-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .theme-toggle-wrapper {
+    top: 15px;
+    right: 15px;
+    gap: 10px;
+  }
+  
+  .timer-display {
+    padding: 6px 12px;
+    font-size: 14px;
+    min-width: 70px;
+  }
+  
+  .game-mode-wrapper {
+    margin: 15px auto;
+  }
+}
+
+
+
+/* ==================== LEADERBOARD AVATAR STYLES DENGAN EFEK NEON TERBARU ==================== */
+
+/* Avatar styling untuk profile header dengan animated gradient border */
+.profile-header {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  border: 4px solid transparent;
+  /* Menggunakan warna neon cyan-magenta */
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF, #FF00FF) border-box;
+  animation: rotateNeonBorder 3s linear infinite; /* Nama animasi diubah */
+}
+
+/* Animated gradient border effect */
+@keyframes rotateNeonBorder {
+  0% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(0deg, #00FFFF, #FF00FF) border-box;
+  }
+  50% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(180deg, #FF00FF, #00FFFF) border-box;
+  }
+  100% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(360deg, #00FFFF, #FF00FF) border-box;
+  }
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  /* Efek bayangan neon */
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 
+              0 0 30px rgba(255, 0, 255, 0.6),
+              0 0 40px rgba(0, 255, 255, 0.4);
+}
+
+/* Avatar styling untuk table dengan animated gradient border */
+.leaderboard-table td img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  /* Menggunakan warna neon cyan-magenta */
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF, #FF00FF) border-box;
+  animation: rotateNeonBorderSmall 3s linear infinite; /* Nama animasi diubah */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+
+/* Animated gradient border untuk avatar kecil di table */
+@keyframes rotateNeonBorderSmall {
+  0% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(0deg, #00FFFF, #FF00FF) border-box;
+  }
+  50% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(180deg, #FF00FF, #00FFFF) border-box;
+  }
+  100% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(360deg, #00FFFF, #FF00FF) border-box;
+  }
+}
+
+.leaderboard-table td img:hover {
+  transform: scale(1.15);
+  cursor: pointer;
+  /* Efek bayangan neon */
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.6), 
+              0 0 25px rgba(255, 0, 255, 0.4);
+  animation-duration: 1.5s; /* Speed up on hover */
+}
+
+/* Top 3 special styling dengan gradient border yang lebih vibrant */
+.leaderboard-table tbody tr:nth-child(1) td:nth-child(2) img {
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #ffd700, #ffed4e, #ffd700, #ffed4e) border-box !important;
+  animation: goldShine 2s linear infinite !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+@keyframes goldShine {
+  0%, 100% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(0deg, #ffd700, #ffed4e, #ffd700, #ffed4e, #ffd700) border-box;
+  }
+  50% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(180deg, #ffed4e, #ffd700, #ffed4e, #ffd700, #ffed4e) border-box;
+  }
+}
+
+.leaderboard-table tbody tr:nth-child(2) td:nth-child(2) img {
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #c0c0c0, #e8e8e8, #c0c0c0, #e8e8e8) border-box !important;
+  animation: silverShine 2s linear infinite !important;
+  box-shadow: 0 0 15px rgba(192, 192, 192, 0.8);
+}
+
+@keyframes silverShine {
+  0%, 100% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(0deg, #c0c0c0, #e8e8e8, #c0c0c0, #e8e8e8, #c0c0c0) border-box;
+  }
+  50% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(180deg, #e8e8e8, #c0c0c0, #e8e8e8, #c0c0c0, #e8e8e8) border-box;
+  }
+}
+
+.leaderboard-table tbody tr:nth-child(3) td:nth-child(2) img {
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #cd7f32, #e89b5c, #cd7f32, #e89b5c) border-box !important;
+  animation: bronzeShine 2s linear infinite !important;
+  box-shadow: 0 0 15px rgba(205, 127, 50, 0.8);
+}
+
+@keyframes bronzeShine {
+  0%, 100% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(0deg, #cd7f32, #e89b5c, #cd7f32, #e89b5c, #cd7f32) border-box;
+  }
+  50% {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(180deg, #e89b5c, #cd7f32, #e89b5c, #cd7f32, #e89b5c) border-box;
+  }
+}
+
+/* Avatar loading animation */
+.leaderboard-table td img {
+  animation: fadeInAvatar 0.4s ease-in, rotateNeonBorderSmall 3s linear infinite;
+}
+
+@keyframes fadeInAvatar {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dark mode avatar styling */
+body.dark-mode .profile-avatar {
+  background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+              linear-gradient(45deg, #00FFFF, #FF00FF) border-box;
+}
+
+body.dark-mode .leaderboard-table td img {
+  background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+              linear-gradient(45deg, #00FFFF, #FF00FF) border-box;
+}
+
+/* Pause animation on reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .profile-avatar,
+  .leaderboard-table td img {
+    animation: none;
+  }
+}
+
+/* Responsive avatar sizing */
+@media (max-width: 768px) {
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    border-width: 3px;
+  }
+  
+  .leaderboard-table td img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-avatar {
+    width: 50px;
+    height: 50px;
+    border-width: 2px;
+  }
+  
+  .leaderboard-table td img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
