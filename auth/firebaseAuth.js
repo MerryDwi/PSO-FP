@@ -1,20 +1,26 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCXw-mEwyjH9qA5W8jM5W3zSwbXqMhRk",
-  authDomain: "pso-fp-aci5ba.firebaseapp.com",
-  projectId: "pso-fp-aci5ba",
-  storageBucket: "pso-fp-aci5ba.appspot.com",
-  messagingSenderId: "574242918850",
-  appId: "1:574242918850:web:5ab90f7ac913323867",
+  apiKey: "AIzaSyBRQaEYKS-erNIpHYkztQ60sJ8dpSO3eVE",
+  authDomain: "pso-fp-development.firebaseapp.com",
+  projectId: "pso-fp-development",
+  storageBucket: "pso-fp-development.firebasestorage.app",
+  messagingSenderId: "128319164432",
+  appId: "1:128319164432:web:92ca395dbbfbfdfd287a95",
+  measurementId: "G-Z7HTWR8CPS",
 };
 
+// Initialize Firebase
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const auth = getAuth(app);
 
 const ERROR_MESSAGES = {
@@ -43,4 +49,3 @@ export const signUp = async (email, password) => {
     throw mapFirebaseError(error);
   }
 };
-
