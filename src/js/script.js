@@ -20,7 +20,7 @@ if (!isNode) {
   // Track game moves and board state
   window.gameMoves = [];
   window.boardState = Array(9).fill("");
-  
+
   // REMOVED: OLD timer system - now use window.gameTimer from game.html
 }
 
@@ -213,7 +213,8 @@ function findBestMove() {
       [2, 4, 6],
     ];
     return winCombinations.some(
-      ([a, b, c]) => board[a] === player && board[b] === player && board[c] === player
+      ([a, b, c]) =>
+        board[a] === player && board[b] === player && board[c] === player
     );
   };
 
@@ -234,26 +235,34 @@ function findBestMove() {
   }
 
   // 3) Ambil center jika kosong
-  if (currentCells[4] && currentCells[4].textContent === "") return currentCells[4];
+  if (currentCells[4] && currentCells[4].textContent === "")
+    return currentCells[4];
 
   // 4) Ambil corner acak
   const corners = [0, 2, 6, 8];
-  const availableCorners = corners.filter((i) => currentCells[i] && currentCells[i].textContent === "");
+  const availableCorners = corners.filter(
+    (i) => currentCells[i] && currentCells[i].textContent === ""
+  );
   if (availableCorners.length > 0) {
-    const choice = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+    const choice =
+      availableCorners[Math.floor(Math.random() * availableCorners.length)];
     return currentCells[choice];
   }
 
   // 5) Ambil edge acak
   const edges = [1, 3, 5, 7];
-  const availableEdges = edges.filter((i) => currentCells[i] && currentCells[i].textContent === "");
+  const availableEdges = edges.filter(
+    (i) => currentCells[i] && currentCells[i].textContent === ""
+  );
   if (availableEdges.length > 0) {
-    const choice = availableEdges[Math.floor(Math.random() * availableEdges.length)];
+    const choice =
+      availableEdges[Math.floor(Math.random() * availableEdges.length)];
     return currentCells[choice];
   }
 
   // 6) Fallback
-  const rand = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+  const rand =
+    availableMoves[Math.floor(Math.random() * availableMoves.length)];
   return currentCells[rand];
 }
 globalNS.findBestMove = findBestMove;
@@ -296,11 +305,16 @@ function resetTimer() {
 }
 
 function getElapsedTime() {
-  if (isNode) return 0;
-  // Get elapsed time from game.html timer
-  if (window.gameTimer && window.gameTimer.getElapsedTime) {
+  // Get elapsed time from game.html timer (check window.gameTimer first, even in test env)
+  if (
+    typeof window !== "undefined" &&
+    window.gameTimer &&
+    window.gameTimer.getElapsedTime
+  ) {
     return window.gameTimer.getElapsedTime();
   }
+  // Fallback: return 0 if in Node/test environment or timer not available
+  if (isNode) return 0;
   return 0;
 }
 
@@ -312,7 +326,7 @@ function handleCellClick(event) {
   if (!cell) return;
 
   if (cell.textContent !== "" || globalNS.gameState.gameOver) return;
-  
+
   // Start timer on first move
   startTimer();
 
@@ -451,7 +465,7 @@ function finishGame(text) {
     gameOverMessage.style.display = "block";
   }
   if (restartButton) restartButton.style.display = "block";
-  
+
   // Stop timer
   stopTimer();
 

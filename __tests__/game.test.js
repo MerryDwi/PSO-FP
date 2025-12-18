@@ -44,8 +44,11 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  // Reset the flag at the start of each test
+  global.__jestUsingRealTimers = false;
   jest.resetModules();
+  // Use fake timers by default (tests that need real timers will call jest.useRealTimers() themselves)
+  jest.useFakeTimers();
 
   // ClassList override agar bisa di-spy
   Object.defineProperty(document.body, "classList", {
@@ -198,7 +201,25 @@ afterEach(() => {
   document.addEventListener = originalAddEventListener;
 
   jest.clearAllMocks(); // Clear mock calls
-  jest.runOnlyPendingTimers(); // Clear any pending timers
+
+  // Only run pending timers if fake timers are actually enabled
+  // Check if we're using fake timers by checking if jest.getTimerCount exists and returns a number
+  if (
+    typeof jest.getTimerCount === "function" &&
+    !global.__jestUsingRealTimers
+  ) {
+    try {
+      const timerCount = jest.getTimerCount();
+      if (timerCount > 0) {
+        jest.runOnlyPendingTimers(); // Clear any pending timers
+      }
+    } catch (e) {
+      // Ignore error if fake timers check fails
+    }
+  }
+
+  // Reset the flag
+  global.__jestUsingRealTimers = false;
   jest.useRealTimers(); // Switch back to real timers
 });
 
@@ -1032,11 +1053,21 @@ describe("Edge Cases Tests", () => {
   });
 
   test("saveScoreToFirestore should handle different result formats", async () => {
+    global.__jestUsingRealTimers = true;
     jest.useRealTimers();
     const mockSaveScore = jest.fn().mockResolvedValue("doc-id");
     const mockSaveGameHistory = jest.fn().mockResolvedValue("history-id");
     const mockSaveGameStatistics = jest.fn().mockResolvedValue("stats-id");
     const mockSaveUserPreferences = jest.fn().mockResolvedValue("prefs-id");
+
+    // Setup window.gameTimer with getElapsedTime function BEFORE setting up leaderboardService
+    const mockGetElapsedTime = jest.fn().mockReturnValue(45);
+    window.gameTimer = {
+      getElapsedTime: mockGetElapsedTime,
+      seconds: 45,
+      interval: null,
+      running: false,
+    };
 
     window.leaderboardService = {
       saveScore: mockSaveScore,
@@ -1049,19 +1080,17 @@ describe("Edge Cases Tests", () => {
     scriptModule.scoreX = 2;
     scriptModule.scoreO = 1;
     scriptModule.scoreDraw = 1;
-    if (!scriptModule.gameTimer) {
-      scriptModule.gameTimer = { seconds: 0, interval: null, running: false };
-    }
-    scriptModule.gameTimer.seconds = 45;
 
     if (scriptModule.saveScoreToFirestore) {
       scriptModule.saveScoreToFirestore("O wins!");
       await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that getElapsedTime was called
+      expect(mockGetElapsedTime).toHaveBeenCalled();
       expect(mockSaveScore).toHaveBeenCalledWith(2, 1, 45, "lose");
     } else {
       expect(true).toBe(true);
     }
-    jest.useFakeTimers();
   }, 10000);
 
   test("saveScoreToFirestore should handle empty gameMoves", async () => {

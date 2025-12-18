@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -20,7 +20,22 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize Analytics only if supported (prevents errors in Node.js/testing environments)
+let analytics = null;
+if (typeof window !== "undefined") {
+  // Only initialize analytics in browser environment
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    })
+    .catch(() => {
+      // Silently fail if analytics is not supported
+    });
+}
+
 const auth = getAuth(app);
 
 const ERROR_MESSAGES = {
