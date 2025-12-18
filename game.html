@@ -12,6 +12,18 @@
   </head>
 
   <body>
+    
+    <div class="theme-toggle-wrapper">
+      <div class="timer-display" id="timer-display">
+        ⏱️ <span id="timer-text">00:00</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="theme-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    
     <img
       id="game-logo"
       src="./src/images/logo.png"
@@ -24,12 +36,8 @@
       "
     />
 
-    <div class="top-bar">
-      <label class="switch">
-        <input type="checkbox" id="theme-toggle" />
-        <span class="slider"></span>
-      </label>
-    
+   
+    <div class="game-mode-wrapper">
       <div class="segmented-toggle" id="game-mode-toggle">
         <input
           type="radio"
@@ -66,17 +74,6 @@
     </div>
 
     <div id="test-write-result" style="margin: 10px auto; max-width: 640px; font-size: 13px; line-height: 1.4; display:none;"></div>
-
-    <!-- Leaderboard Modal -->
-    <!-- <div id="leaderboard-modal" class="leaderboard-modal" style="display: none">
-      <div class="leaderboard-content">
-        <span class="leaderboard-close">&times;</span>
-        <h2>🏆 Leaderboard</h2>
-        <div id="leaderboard-list" class="leaderboard-list">
-          <p>Memuat leaderboard...</p>
-        </div>
-      </div>
-    </div> -->
 
     <div id="leaderboard-full" style="display:none" class="leaderboard-fullscreen">
       
@@ -133,18 +130,15 @@
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
       import { firebaseConfig, environment } from "./src/js/firebase.browser.config.js";
 
-      // Initialize from environment-aware config
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // Store globally for leaderboard.js
       window.firebaseApp = app;
       window.firebaseAuth = auth;
       window.firebaseDb = db;
       window.firebaseEnv = environment;
 
-      // Export Firestore functions untuk leaderboard.js
       window.firestore = {
         collection,
         addDoc,
@@ -158,7 +152,6 @@
         serverTimestamp,
       };
 
-      // Small test write helper
       const testBtn = document.getElementById("test-write-button");
       const resultBox = document.getElementById("test-write-result");
       if (testBtn) {
@@ -210,7 +203,6 @@
           (window.vaq = window.vaq || []).push(arguments);
         };
     </script>
-    <!-- <script defer src="/_vercel/insights/script.js"></script> -->
     <script>
       window.si =
         window.si ||
@@ -218,135 +210,8 @@
           (window.siq = window.siq || []).push(arguments);
         };
     </script>
-    <!-- <script defer src="/_vercel/speed-insights/script.js"></script> -->
-    <!-- <script>
-      // Leaderboard functionality
-      (function () {
-        const leaderboardButton = document.getElementById("leaderboard-button");
-        const leaderboardModal = document.getElementById("leaderboard-modal");
-        const leaderboardClose = document.querySelector(".leaderboard-close");
-        const leaderboardList = document.getElementById("leaderboard-list");
-
-        function formatTimestamp(timestamp) {
-          if (!timestamp) return "N/A";
-          if (timestamp.toDate) {
-            // Firestore Timestamp
-            const date = timestamp.toDate();
-            return date.toLocaleString("id-ID");
-          }
-          return new Date(timestamp).toLocaleString("id-ID");
-        }
-
-        function formatTime(seconds) {
-          if (!seconds) return "0s";
-          const mins = Math.floor(seconds / 60);
-          const secs = seconds % 60;
-          return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-        }
-
-        async function loadLeaderboard() {
-          leaderboardList.innerHTML = "<p>Memuat leaderboard...</p>";
-
-          if (!window.leaderboardService) {
-            leaderboardList.innerHTML =
-              "<p>Leaderboard service belum tersedia. Silakan refresh halaman.</p>";
-            return;
-          }
-
-          try {
-            const leaderboard = await window.leaderboardService.getLeaderboard(
-              10
-            );
-
-            if (leaderboard.length === 0) {
-              leaderboardList.innerHTML =
-                "<p>Belum ada data leaderboard. Mainkan game untuk menambahkan score!</p>";
-              return;
-            }
-
-            let html = "";
-            leaderboard.forEach((item) => {
-              const rank = item.rank || 1;
-              const email = item.userEmail || "Anonymous";
-              const totalHumanScore = item.totalHumanScore || 0;
-              const totalComputerScore = item.totalComputerScore || 0;
-              const winCount = item.winCount || 0;
-              const drawCount = item.drawCount || 0;
-              const loseCount = item.loseCount || 0;
-              const gameCount = item.gameCount || 0;
-              const totalGameTime = formatTime(item.totalGameTime || 0);
-
-              // Format waktu rekap (dari session start sampai session end)
-              let sessionTime = "N/A";
-              if (item.sessionStart && item.sessionEnd) {
-                const startTime = item.sessionStart.toDate
-                  ? item.sessionStart.toDate()
-                  : new Date(item.sessionStart);
-                const endTime = item.sessionEnd.toDate
-                  ? item.sessionEnd.toDate()
-                  : new Date(item.sessionEnd);
-                const sessionDuration = Math.floor(
-                  (endTime - startTime) / 1000
-                ); // dalam detik
-                sessionTime = formatTime(sessionDuration);
-              }
-
-              // Format timestamp rekap
-              const sessionStartTime = formatTimestamp(item.sessionStart);
-              const sessionEndTime = formatTimestamp(item.sessionEnd);
-
-              html += `
-                <div class="leaderboard-item">
-                  <div class="leaderboard-item-rank">#${rank}</div>
-                  <div class="leaderboard-item-info">
-                    <div class="leaderboard-item-email">${email}</div>
-                    <div class="leaderboard-item-scores">
-                      Total Score: ${totalHumanScore} - ${totalComputerScore} | Games: ${gameCount}
-                    </div>
-                    <div class="leaderboard-item-scores" style="margin-top: 4px;">
-                      🏆 Menang: ${winCount} | 🤝 Draw: ${drawCount} | 😔 Kalah: ${loseCount}
-                    </div>
-                    <div class="leaderboard-item-scores" style="font-size: 12px; color: #999; margin-top: 4px;">
-                      Waktu Rekap: ${sessionTime} | Mulai: ${sessionStartTime}
-                    </div>
-                  </div>
-                </div>
-              `;
-            });
-
-            leaderboardList.innerHTML = html;
-          } catch (error) {
-            console.error("Error loading leaderboard:", error);
-            leaderboardList.innerHTML =
-              "<p>Gagal memuat leaderboard. Silakan coba lagi.</p>";
-          }
-        }
-
-        if (leaderboardButton) {
-          leaderboardButton.addEventListener("click", () => {
-            leaderboardModal.style.display = "block";
-            loadLeaderboard();
-          });
-        }
-
-        if (leaderboardClose) {
-          leaderboardClose.addEventListener("click", () => {
-            leaderboardModal.style.display = "none";
-          });
-        }
-
-        // Close modal when clicking outside
-        if (leaderboardModal) {
-          leaderboardModal.addEventListener("click", (e) => {
-            if (e.target === leaderboardModal) {
-              leaderboardModal.style.display = "none";
-            }
-          });
-        }
-      })();
-    </script> -->
     <script>
-      // Theme toggle logic - using existing themeToggle from script.js
+      // Theme toggle logic
       (function () {
         const logo = document.getElementById("game-logo");
         const lightLogo = "./src/images/logo.png";
@@ -364,17 +229,14 @@
             if (logo) logo.src = lightLogo;
             body.classList.remove("dark-mode");
           }
-          // Paksa refresh style cells
           document.querySelectorAll(".cell").forEach((cell) => {
-            // Ini akan memicu browser untuk re-apply CSS
             cell.classList.remove("force-refresh");
-            void cell.offsetWidth; // trigger reflow
+            void cell.offsetWidth;
             cell.classList.add("force-refresh");
             setTimeout(() => cell.classList.remove("force-refresh"), 10);
           });
         }
 
-        // Wait for DOM to be ready
         if (document.readyState === "loading") {
           document.addEventListener("DOMContentLoaded", () => {
             const themeToggle = document.getElementById("theme-toggle");
@@ -390,6 +252,63 @@
             updateTheme();
           }
         }
+      })();
+    </script>
+    
+    <script>
+      // Timer functionality
+      (function() {
+        let timerInterval = null;
+        let startTime = null;
+        let isRunning = false;
+
+        const timerText = document.getElementById('timer-text');
+
+        function formatTime(seconds) {
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+          if (!startTime) return;
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          timerText.textContent = formatTime(elapsed);
+        }
+
+        function startTimer() {
+          if (isRunning) return;
+          isRunning = true;
+          startTime = Date.now();
+          timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+          if (!isRunning) return;
+          isRunning = false;
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        function resetTimer() {
+          stopTimer();
+          startTime = null;
+          timerText.textContent = '00:00';
+        }
+
+        // Expose timer functions globally
+        window.gameTimer = {
+          start: startTimer,
+          stop: stopTimer,
+          reset: resetTimer,
+          getElapsedTime: () => {
+            if (!startTime) return 0;
+            return Math.floor((Date.now() - startTime) / 1000);
+          }
+        };
+
+        // Auto-start timer when game starts (optional)
+        // You can call window.gameTimer.start() from your game logic
       })();
     </script>
   </body>

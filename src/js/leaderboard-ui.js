@@ -62,10 +62,8 @@
     const userEmail = await getCurrentUserEmail();
     emailText.textContent = userEmail || "Anonymous";
 
-    const auth = window.firebaseAuth;
-    if (auth?.currentUser?.photoURL) {
-      avatarImg.src = auth.currentUser.photoURL;
-    }
+    // Set foto profil dari file photo_profile.png
+    avatarImg.src = "./src/images/photo_profile.png";
 
     // ============================
     // DISPLAY DATA LEADERBOARD
@@ -80,30 +78,57 @@
       return;
     }
 
-    // Rank di header (selalu user paling atas)
-    const top = data[0];
-    rankText.textContent = `Leaderboard : ${top.rank}st`;
+    // Cari rank user yang sedang login
+    const userRank = data.find(item => item.userEmail === userEmail);
+    if (userRank) {
+      const suffix = getRankSuffix(userRank.rank);
+      rankText.textContent = `Leaderboard : ${userRank.rank}${suffix}`;
+    } else {
+      rankText.textContent = `Leaderboard : Not Ranked`;
+    }
 
     // ============================
-    // TABLE CONTENT
+    // TABLE CONTENT WITH PROFILE PHOTOS
     // ============================
     let html = "";
 
     data.forEach((item) => {
+      const suffix = getRankSuffix(item.rank);
+      
       html += `
         <tr>
-          <td>${item.rank}st</td>
-          <td>${item.userEmail}</td>
+          <td>${item.rank}${suffix}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img 
+                src="./src/images/photo_profile.png" 
+                alt="${item.userEmail}"
+                class="avatar-gradient"
+                onerror="this.src='./src/images/default-avatar.png'"
+              />
+              <span>${item.userEmail}</span>
+            </div>
+          </td>
           <td>${item.winCount}</td>
           <td>${item.loseCount}</td>
           <td>${item.drawCount}</td>
           <td>${formatTime(item.totalGameTime)}</td>
-          <td>${item.winCount}</td>
+          <td>${item.totalHumanScore}</td>
         </tr>
       `;
     });
 
     tableBody.innerHTML = html;
+  }
+
+  // ============================
+  // HELPER: GET RANK SUFFIX
+  // ============================
+  function getRankSuffix(rank) {
+    if (rank === 1) return 'st';
+    if (rank === 2) return 'nd';
+    if (rank === 3) return 'rd';
+    return 'th';
   }
 
 

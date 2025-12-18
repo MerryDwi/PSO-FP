@@ -23,31 +23,57 @@ jobs:
     name: Run ESLint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: 18
+          cache: npm
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run npm audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - run: npm ci
 
       - name: Run ESLint
         run: npm run lint
 
-  test:
-    name: Unit Tests + Coverage
+  snyk:
+    name: Snyk Security Scan
     runs-on: ubuntu-latest
     needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - run: npm ci
+
+      - name: Snyk Code Scan (SAST)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --all-projects --severity-threshold=low
+
+      - name: Snyk IaC Scan
+        uses: snyk/actions/iac@master
+        env:
+          SNYK_TOKEN: ${{ secrets/SNYK_TOKEN }}
+        with:
+          command: test
+
+      - name: Snyk Monitor (upload results)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+
+  test:
+    name: Unit Tests + Coverage (Codecov)
+    runs-on: ubuntu-latest
+    needs: snyk
     steps:
       - uses: actions/checkout@v4
 
@@ -58,35 +84,31 @@ jobs:
 
       - run: npm ci
 
-      - name: Run Tests with Coverage
+      - name: Run Tests
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-coverage
           fail_ci_if_error: false
+          verbose: true
 
   sonarcloud:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
     needs: test
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: 18
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
