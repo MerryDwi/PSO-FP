@@ -12,7 +12,6 @@
   </head>
 
   <body>
-    
     <div class="theme-toggle-wrapper">
       <div class="timer-display" id="timer-display">
         ⏱️ <span id="timer-text">00:00</span>
@@ -23,7 +22,6 @@
       </label>
     </div>
 
-    
     <img
       id="game-logo"
       src="./src/images/logo.png"
@@ -36,7 +34,6 @@
       "
     />
 
-   
     <div class="game-mode-wrapper">
       <div class="segmented-toggle" id="game-mode-toggle">
         <input
@@ -70,17 +67,20 @@
       <button id="leaderboard-button" aria-label="Show Leaderboard">
         🏆 Leaderboard
       </button>
-      <button id="test-write-button" aria-label="Test Firestore Write">🧪 Test Write</button>
     </div>
 
-    <div id="test-write-result" style="margin: 10px auto; max-width: 640px; font-size: 13px; line-height: 1.4; display:none;"></div>
-
-    <div id="leaderboard-full" style="display:none" class="leaderboard-fullscreen">
-      
+    <div
+      id="leaderboard-full"
+      style="display: none"
+      class="leaderboard-fullscreen"
+    >
       <div class="leaderboard-box">
-
         <div class="profile-header">
-          <img id="profile-avatar" class="profile-avatar" src="./src/images/default-avatar.png" />
+          <img
+            id="profile-avatar"
+            class="profile-avatar"
+            src="./src/images/default-avatar.png"
+          />
           <div id="profile-email" class="profile-email">email@gmail.com</div>
           <div id="profile-rank" class="profile-rank">Leaderboard : 1st</div>
         </div>
@@ -101,16 +101,19 @@
           </thead>
 
           <tbody id="leaderboard-body">
-            <tr><td colspan="7" style="text-align:center;color:white">Loading...</td></tr>
+            <tr>
+              <td colspan="7" style="text-align: center; color: white">
+                Loading...
+              </td>
+            </tr>
           </tbody>
         </table>
 
         <button id="close-leaderboard" class="logout-btn">Back</button>
-
       </div>
     </div>
     <script src="./src/js/leaderboard-ui.js"></script>
-    
+
     <!-- Firebase Scripts (CDN SDK) + Config (local env switch) -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -128,7 +131,10 @@
         getDocs,
         serverTimestamp,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-      import { firebaseConfig, environment } from "./src/js/firebase.browser.config.js";
+      import {
+        firebaseConfig,
+        environment,
+      } from "./src/js/firebase.browser.config.js";
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
@@ -151,46 +157,6 @@
         getDocs,
         serverTimestamp,
       };
-
-      const testBtn = document.getElementById("test-write-button");
-      const resultBox = document.getElementById("test-write-result");
-      if (testBtn) {
-        testBtn.addEventListener("click", async () => {
-          resultBox.style.display = "block";
-          resultBox.textContent = "Running test write...";
-          try {
-            if (!auth || !db) {
-              throw new Error("Firebase belum diinisialisasi (auth/db missing)");
-            }
-            const user = auth.currentUser;
-            if (!user) {
-              throw new Error("User belum login. Silakan login di index.html terlebih dahulu.");
-            }
-            const { collection, addDoc, serverTimestamp } = window.firestore || {};
-            if (!collection || !addDoc || !serverTimestamp) {
-              throw new Error("Firestore functions belum tersedia di window.firestore");
-            }
-            const payload = {
-              userId: user.uid,
-              userEmail: user.email || null,
-              humanScore: 1,
-              computerScore: 0,
-              gameTime: 5,
-              result: "win",
-              timestamp: serverTimestamp(),
-              gameMode: "playerVsComputer",
-              debug: { env: window.firebaseEnv, time: new Date().toISOString() },
-            };
-            const docRef = await addDoc(collection(db, "leaderboard"), payload);
-            resultBox.style.color = "#0a7";
-            resultBox.textContent = `✅ Test write success. Doc ID: ${docRef.id}`;
-          } catch (err) {
-            console.error("Test write error:", err);
-            resultBox.style.color = "#c00";
-            resultBox.textContent = `❌ Test write failed: ${err && err.message ? err.message : err}`;
-          }
-        });
-      }
     </script>
 
     <script src="./src/js/gameLogic.js"></script>
@@ -254,20 +220,23 @@
         }
       })();
     </script>
-    
+
     <script>
       // Timer functionality
-      (function() {
+      (function () {
         let timerInterval = null;
         let startTime = null;
         let isRunning = false;
 
-        const timerText = document.getElementById('timer-text');
+        const timerText = document.getElementById("timer-text");
 
         function formatTime(seconds) {
           const mins = Math.floor(seconds / 60);
           const secs = seconds % 60;
-          return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+          return `${String(mins).padStart(2, "0")}:${String(secs).padStart(
+            2,
+            "0"
+          )}`;
         }
 
         function updateTimer() {
@@ -293,7 +262,7 @@
         function resetTimer() {
           stopTimer();
           startTime = null;
-          timerText.textContent = '00:00';
+          timerText.textContent = "00:00";
         }
 
         // Expose timer functions globally
@@ -304,7 +273,7 @@
           getElapsedTime: () => {
             if (!startTime) return 0;
             return Math.floor((Date.now() - startTime) / 1000);
-          }
+          },
         };
 
         // Auto-start timer when game starts (optional)
