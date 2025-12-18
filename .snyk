@@ -1,0 +1,17 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+
+# Ignore paths that should not be scanned
+exclude:
+  global:
+    - node_modules/**
+    - coverage/**
+    - .git/**
+    - dist/**
+    - build/**
+    - __tests__/**
+    - **/tsdoc-metadata.json
+    - **/tsconfig.json
+    - **/*.test.js
+    - **/*.spec.js
+

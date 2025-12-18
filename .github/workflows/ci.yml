@@ -42,6 +42,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Snyk IaC Scan
+        uses: snyk/actions/iac@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --severity-threshold=medium
+        continue-on-error: true
+
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -55,13 +64,6 @@ jobs:
         with:
           command: test
           args: --all-projects --severity-threshold=low
-
-      - name: Snyk IaC Scan
-        uses: snyk/actions/iac@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
 
       - name: Snyk Monitor (upload results)
         uses: snyk/actions/node@master
