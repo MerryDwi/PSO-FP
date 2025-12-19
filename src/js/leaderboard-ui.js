@@ -54,7 +54,7 @@
       return;
     }
 
-    const data = await window.leaderboardService.getLeaderboard(10);
+    const data = await window.leaderboardService.getLeaderboard(5);
 
     // ============================
     // HEADER USER LOGIN
@@ -113,7 +113,7 @@
           <td>${item.loseCount}</td>
           <td>${item.drawCount}</td>
           <td>${formatTime(item.totalGameTime)}</td>
-          <td>${item.totalHumanScore}</td>
+          <td>${item.totalScore}</td>
         </tr>
       `;
     });
