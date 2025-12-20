@@ -386,71 +386,88 @@ globalNS.handleCellClick = handleCellClick;
 // SAVE SCORE TO FIRESTORE
 // ===============================
 function saveScoreToFirestore(result) {
-  if (globalNS.gameMode !== "playerVsComputer") {
-    return;
-  }
+  try {
+    if (globalNS.gameMode !== "playerVsComputer") {
+      return;
+    }
 
-  if (
-    typeof window === "undefined" ||
-    !window.leaderboardService ||
-    !window.leaderboardService.saveScore
-  ) {
-    console.warn("Leaderboard service belum tersedia");
-    return;
-  }
+    if (
+      typeof window === "undefined" ||
+      !window.leaderboardService ||
+      !window.leaderboardService.saveScore
+    ) {
+      throw new Error("Leaderboard service belum tersedia");
+    }
 
-  let gameResult = "draw";
-  if (result.includes("X wins")) {
-    gameResult = "win";
-  } else if (result.includes("O wins")) {
-    gameResult = "lose";
-  }
+    let gameResult = "draw";
+    if (result.includes("X wins")) {
+      gameResult = "win";
+    } else if (result.includes("O wins")) {
+      gameResult = "lose";
+    }
 
-  // Get elapsed time from timer
-  const gameTime = getElapsedTime();
+    // Get elapsed time from timer
+    const gameTime = getElapsedTime();
 
-  window.leaderboardService
-    .saveScore(
-      globalNS.scoreX,
-      globalNS.scoreO,
-      gameTime, // Use elapsed time from timer
-      gameResult
-    )
-    .then(async (docId) => {
-      if (docId) {
-        console.log("Score berhasil disimpan ke leaderboard");
+    window.leaderboardService
+      .saveScore(
+        globalNS.scoreX,
+        globalNS.scoreO,
+        gameTime, // Use elapsed time from timer
+        gameResult
+      )
+      .then(async (docId) => {
+        try {
+          if (docId) {
+            console.log("Score berhasil disimpan ke leaderboard");
 
-        if (globalNS.gameMoves && globalNS.gameMoves.length > 0) {
-          await window.leaderboardService.saveGameHistory(
-            globalNS.gameMoves,
-            globalNS.boardState || Array(9).fill(""),
-            docId
-          );
+            if (globalNS.gameMoves && globalNS.gameMoves.length > 0) {
+              await window.leaderboardService.saveGameHistory(
+                globalNS.gameMoves,
+                globalNS.boardState || Array(9).fill(""),
+                docId
+              );
+            }
+
+            const stats = {
+              totalGames: 1,
+              totalWins: gameResult === "win" ? 1 : 0,
+              totalDraws: gameResult === "draw" ? 1 : 0,
+              totalLosses: gameResult === "lose" ? 1 : 0,
+              bestTime: gameTime,
+              lastGameTime: gameTime,
+            };
+            await window.leaderboardService.saveGameStatistics(stats);
+
+            const preferences = {
+              theme:
+                typeof localStorage !== "undefined"
+                  ? localStorage.getItem("theme") || "light"
+                  : "light",
+              gameMode: globalNS.gameMode || "playerVsComputer",
+            };
+            await window.leaderboardService.saveUserPreferences(preferences);
+          }
+        } catch (error) {
+          throw new Error(`Failed to save game data: ${error.message}`);
         }
-
-        const stats = {
-          totalGames: 1,
-          totalWins: gameResult === "win" ? 1 : 0,
-          totalDraws: gameResult === "draw" ? 1 : 0,
-          totalLosses: gameResult === "lose" ? 1 : 0,
-          bestTime: gameTime,
-          lastGameTime: gameTime,
-        };
-        await window.leaderboardService.saveGameStatistics(stats);
-
-        const preferences = {
-          theme:
-            typeof localStorage !== "undefined"
-              ? localStorage.getItem("theme") || "light"
-              : "light",
-          gameMode: globalNS.gameMode || "playerVsComputer",
-        };
-        await window.leaderboardService.saveUserPreferences(preferences);
-      }
-    })
-    .catch((error) => {
-      console.error("Gagal menyimpan score:", error);
-    });
+      })
+      .catch((error) => {
+        // Wrap error as exception but don't break game flow
+        const exception = new Error(
+          `Failed to save score to Firestore: ${error.message}`
+        );
+        console.error("Gagal menyimpan score:", exception);
+        // Don't re-throw to prevent breaking game flow
+      });
+  } catch (error) {
+    // Wrap error as exception but don't break game flow
+    const exception = new Error(
+      `Error in saveScoreToFirestore: ${error.message}`
+    );
+    console.error("Error in saveScoreToFirestore:", exception);
+    // Don't re-throw to prevent breaking game flow
+  }
 }
 
 // ===============================

@@ -42,195 +42,237 @@ async function ensureFirebaseReady() {
 // SAVE SCORE (PER GAME - RAW)
 // ===============================
 async function saveScore(humanScore, computerScore, gameTime, result) {
-  if (!(await ensureFirebaseReady())) return null;
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
+    }
 
-  const user = auth.currentUser;
-  if (!user) return null;
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User is not authenticated");
+    }
 
-  const { collection, addDoc, serverTimestamp } = window.firestore;
+    const { collection, addDoc, serverTimestamp } = window.firestore;
 
-  const resetTimestampISO =
-    localStorage.getItem("scoreResetTimestamp") ||
-    new Date().toISOString();
+    const resetTimestampISO =
+      localStorage.getItem("scoreResetTimestamp") || new Date().toISOString();
 
-  localStorage.setItem("scoreResetTimestamp", resetTimestampISO);
+    localStorage.setItem("scoreResetTimestamp", resetTimestampISO);
 
-  const docRef = await addDoc(collection(db, "leaderboard"), {
-    userId: user.uid,
-    userEmail: user.email,
-    humanScore,
-    computerScore,
-    gameTime,
-    result, // win | lose | draw
-    timestamp: serverTimestamp(),
-    resetTimestampISO,
-  });
+    const docRef = await addDoc(collection(db, "leaderboard"), {
+      userId: user.uid,
+      userEmail: user.email,
+      humanScore,
+      computerScore,
+      gameTime,
+      result, // win | lose | draw
+      timestamp: serverTimestamp(),
+      resetTimestampISO,
+    });
 
-  return docRef.id;
+    return docRef.id;
+  } catch (error) {
+    throw new Error(`Failed to save score: ${error.message}`);
+  }
 }
 
 // ===============================
 // GET LEADERBOARD (AGGREGATED)
 // ===============================
 async function getLeaderboard(limit = 7) {
-  if (!(await ensureFirebaseReady())) return [];
-
-  const { collection, getDocs } = window.firestore;
-
-  const snapshot = await getDocs(collection(db, "leaderboard"));
-
-  const map = new Map();
-
-  snapshot.forEach((doc) => {
-    const d = doc.data();
-    if (!d.userId) return;
-
-    if (!map.has(d.userId)) {
-      map.set(d.userId, {
-        userId: d.userId,
-        userEmail: d.userEmail,
-        totalHumanScore: 0,
-        totalComputerScore: 0,
-        totalGameTime: 0,
-        winCount: 0,
-        loseCount: 0,
-        drawCount: 0,
-        gameCount: 0,
-      });
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
     }
 
-    const s = map.get(d.userId);
-    if (d.result === "win") {
-      s.totalHumanScore += 2;
-      s.winCount++;
-    } else if (d.result === "lose") {
-      s.totalHumanScore -= 1;
-      s.loseCount++;
-    } else {
-      // draw
-      s.drawCount++;
-    }
+    const { collection, getDocs } = window.firestore;
 
-    s.totalGameTime += d.gameTime || 0;
-    s.gameCount++;
-  });
+    const snapshot = await getDocs(collection(db, "leaderboard"));
 
-  return Array.from(map.values())
-    .sort((a, b) =>
-      b.totalHumanScore - a.totalHumanScore ||
-      b.winCount - a.winCount ||
-      a.totalGameTime - b.totalGameTime
-    )
-    .slice(0, limit)
-    .map((u, i) => ({
-      rank: i + 1,
-      userId: u.userId,
-      userEmail: u.userEmail,
+    const map = new Map();
 
-      totalScore: u.totalHumanScore,   // score berbasis poin
-      winCount: u.winCount,
-      loseCount: u.loseCount,
-      drawCount: u.drawCount,
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      if (!d.userId) return;
 
-      totalGameTime: u.totalGameTime,
-      gameCount: u.gameCount,
-    }));
+      if (!map.has(d.userId)) {
+        map.set(d.userId, {
+          userId: d.userId,
+          userEmail: d.userEmail,
+          totalHumanScore: 0,
+          totalComputerScore: 0,
+          totalGameTime: 0,
+          winCount: 0,
+          loseCount: 0,
+          drawCount: 0,
+          gameCount: 0,
+        });
+      }
 
+      const s = map.get(d.userId);
+      if (d.result === "win") {
+        s.totalHumanScore += 2;
+        s.winCount++;
+      } else if (d.result === "lose") {
+        s.totalHumanScore -= 1;
+        s.loseCount++;
+      } else {
+        // draw
+        s.drawCount++;
+      }
+
+      s.totalGameTime += d.gameTime || 0;
+      s.gameCount++;
+    });
+
+    return Array.from(map.values())
+      .sort(
+        (a, b) =>
+          b.totalHumanScore - a.totalHumanScore ||
+          b.winCount - a.winCount ||
+          a.totalGameTime - b.totalGameTime
+      )
+      .slice(0, limit)
+      .map((u, i) => ({
+        rank: i + 1,
+        userId: u.userId,
+        userEmail: u.userEmail,
+
+        totalScore: u.totalHumanScore, // score berbasis poin
+        winCount: u.winCount,
+        loseCount: u.loseCount,
+        drawCount: u.drawCount,
+
+        totalGameTime: u.totalGameTime,
+        gameCount: u.gameCount,
+      }));
+  } catch (error) {
+    throw new Error(`Failed to get leaderboard: ${error.message}`);
+  }
 }
 
 // ===============================
 // GET USER SCORES (RAW)
 // ===============================
 async function getUserScores(userId = null) {
-  if (!(await ensureFirebaseReady())) return [];
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
+    }
 
-  const user = auth.currentUser;
-  const uid = userId || user?.uid;
-  if (!uid) return [];
+    const user = auth.currentUser;
+    const uid = userId || user?.uid;
+    if (!uid) {
+      throw new Error("User ID is not available");
+    }
 
-  const { collection, query, where, getDocs } = window.firestore;
+    const { collection, query, where, getDocs } = window.firestore;
 
-  const q = query(
-    collection(db, "leaderboard"),
-    where("userId", "==", uid)
-  );
+    const q = query(collection(db, "leaderboard"), where("userId", "==", uid));
 
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data());
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data());
+  } catch (error) {
+    throw new Error(`Failed to get user scores: ${error.message}`);
+  }
 }
 
 // ===============================
 // SAVE GAME HISTORY
 // ===============================
 async function saveGameHistory(moves, boardState, gameId) {
-  if (!(await ensureFirebaseReady())) return null;
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
+    }
 
-  const user = auth.currentUser;
-  if (!user) return null;
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User is not authenticated");
+    }
 
-  const { collection, addDoc, serverTimestamp } = window.firestore;
+    const { collection, addDoc, serverTimestamp } = window.firestore;
 
-  const ref = await addDoc(collection(db, "gameHistory"), {
-    userId: user.uid,
-    userEmail: user.email,
-    gameId,
-    moves,
-    boardState,
-    moveCount: moves?.length || 0,
-    timestamp: serverTimestamp(),
-  });
+    const ref = await addDoc(collection(db, "gameHistory"), {
+      userId: user.uid,
+      userEmail: user.email,
+      gameId,
+      moves,
+      boardState,
+      moveCount: moves?.length || 0,
+      timestamp: serverTimestamp(),
+    });
 
-  return ref.id;
+    return ref.id;
+  } catch (error) {
+    throw new Error(`Failed to save game history: ${error.message}`);
+  }
 }
 
 // ===============================
 // SAVE USER PREFERENCES
 // ===============================
 async function saveUserPreferences(preferences) {
-  if (!(await ensureFirebaseReady())) return null;
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
+    }
 
-  const user = auth.currentUser;
-  if (!user) return null;
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User is not authenticated");
+    }
 
-  const { doc, setDoc, serverTimestamp } = window.firestore;
+    const { doc, setDoc, serverTimestamp } = window.firestore;
 
-  await setDoc(
-    doc(db, "userPreferences", user.uid),
-    {
-      userId: user.uid,
-      userEmail: user.email,
-      preferences,
-      lastUpdated: serverTimestamp(),
-    },
-    { merge: true }
-  );
+    await setDoc(
+      doc(db, "userPreferences", user.uid),
+      {
+        userId: user.uid,
+        userEmail: user.email,
+        preferences,
+        lastUpdated: serverTimestamp(),
+      },
+      { merge: true }
+    );
 
-  return user.uid;
+    return user.uid;
+  } catch (error) {
+    throw new Error(`Failed to save user preferences: ${error.message}`);
+  }
 }
 
 // ===============================
 // SAVE GAME STATISTICS
 // ===============================
 async function saveGameStatistics(stats) {
-  if (!(await ensureFirebaseReady())) return null;
+  try {
+    if (!(await ensureFirebaseReady())) {
+      throw new Error("Firebase is not ready");
+    }
 
-  const user = auth.currentUser;
-  if (!user) return null;
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User is not authenticated");
+    }
 
-  const { doc, setDoc, serverTimestamp } = window.firestore;
+    const { doc, setDoc, serverTimestamp } = window.firestore;
 
-  await setDoc(
-    doc(db, "userStatistics", user.uid),
-    {
-      userId: user.uid,
-      userEmail: user.email,
-      ...stats,
-      lastUpdated: serverTimestamp(),
-    },
-    { merge: true }
-  );
+    await setDoc(
+      doc(db, "userStatistics", user.uid),
+      {
+        userId: user.uid,
+        userEmail: user.email,
+        ...stats,
+        lastUpdated: serverTimestamp(),
+      },
+      { merge: true }
+    );
 
-  return user.uid;
+    return user.uid;
+  } catch (error) {
+    throw new Error(`Failed to save game statistics: ${error.message}`);
+  }
 }
 
 // ===============================

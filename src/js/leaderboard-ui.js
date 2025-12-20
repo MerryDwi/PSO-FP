@@ -12,7 +12,6 @@
 
   const tableBody = document.getElementById("leaderboard-body");
 
-
   // ============================
   // FORMATTER
   // ============================
@@ -21,7 +20,6 @@
     if (sec < 60) return `${sec} sec`;
     return `${Math.floor(sec / 60)}m ${sec % 60}s`;
   }
-
 
   // ============================
   // GET CURRENT USER EMAIL
@@ -44,102 +42,125 @@
     });
   }
 
-
   // ============================
   // LOAD LEADERBOARD FROM FIRESTORE
   // ============================
   async function loadLeaderboardUI() {
-    if (!window.leaderboardService) {
-      console.error("Leaderboard service belum siap");
-      return;
+    try {
+      if (!window.leaderboardService) {
+        throw new Error("Leaderboard service belum siap");
+      }
+
+      const data = await window.leaderboardService.getLeaderboard(7);
+
+      // ============================
+      // HEADER USER LOGIN
+      // ============================
+      const userEmail = await getCurrentUserEmail();
+      emailText.textContent = userEmail || "Anonymous";
+
+      // Set foto profil dari file photo_profile.png
+      avatarImg.src = "./src/images/photo_profile.png";
+
+      // ============================
+      // DISPLAY DATA LEADERBOARD
+      // ============================
+      if (data.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center;color:white">
+              Tidak ada data leaderboard
+            </td>
+          </tr>`;
+        return;
+      }
+
+      // Cari rank user yang sedang login
+      const userRank = data.find((item) => item.userEmail === userEmail);
+      if (userRank) {
+        const suffix = getRankSuffix(userRank.rank);
+        rankText.textContent = `Leaderboard : ${userRank.rank}${suffix}`;
+      } else {
+        rankText.textContent = `Leaderboard : Not Ranked`;
+      }
+
+      // ============================
+      // TABLE CONTENT WITH PROFILE PHOTOS
+      // ============================
+      let html = "";
+
+      data.forEach((item) => {
+        const suffix = getRankSuffix(item.rank);
+
+        html += `
+          <tr>
+            <td>${item.rank}${suffix}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img 
+                  src="./src/images/photo_profile.png" 
+                  alt="${item.userEmail}"
+                  class="avatar-gradient"
+                  onerror="this.src='./src/images/default-avatar.png'"
+                />
+                <span>${item.userEmail}</span>
+              </div>
+            </td>
+            <td>${item.winCount}</td>
+            <td>${item.loseCount}</td>
+            <td>${item.drawCount}</td>
+            <td>${formatTime(item.totalGameTime)}</td>
+            <td>${item.totalScore}</td>
+          </tr>
+        `;
+      });
+
+      tableBody.innerHTML = html;
+    } catch (error) {
+      throw new Error(`Failed to load leaderboard UI: ${error.message}`);
     }
-
-    const data = await window.leaderboardService.getLeaderboard(7);
-
-    // ============================
-    // HEADER USER LOGIN
-    // ============================
-    const userEmail = await getCurrentUserEmail();
-    emailText.textContent = userEmail || "Anonymous";
-
-    // Set foto profil dari file photo_profile.png
-    avatarImg.src = "./src/images/photo_profile.png";
-
-    // ============================
-    // DISPLAY DATA LEADERBOARD
-    // ============================
-    if (data.length === 0) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align:center;color:white">
-            Tidak ada data leaderboard
-          </td>
-        </tr>`;
-      return;
-    }
-
-    // Cari rank user yang sedang login
-    const userRank = data.find(item => item.userEmail === userEmail);
-    if (userRank) {
-      const suffix = getRankSuffix(userRank.rank);
-      rankText.textContent = `Leaderboard : ${userRank.rank}${suffix}`;
-    } else {
-      rankText.textContent = `Leaderboard : Not Ranked`;
-    }
-
-    // ============================
-    // TABLE CONTENT WITH PROFILE PHOTOS
-    // ============================
-    let html = "";
-
-    data.forEach((item) => {
-      const suffix = getRankSuffix(item.rank);
-      
-      html += `
-        <tr>
-          <td>${item.rank}${suffix}</td>
-          <td>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <img 
-                src="./src/images/photo_profile.png" 
-                alt="${item.userEmail}"
-                class="avatar-gradient"
-                onerror="this.src='./src/images/default-avatar.png'"
-              />
-              <span>${item.userEmail}</span>
-            </div>
-          </td>
-          <td>${item.winCount}</td>
-          <td>${item.loseCount}</td>
-          <td>${item.drawCount}</td>
-          <td>${formatTime(item.totalGameTime)}</td>
-          <td>${item.totalScore}</td>
-        </tr>
-      `;
-    });
-
-    tableBody.innerHTML = html;
   }
 
   // ============================
   // HELPER: GET RANK SUFFIX
   // ============================
   function getRankSuffix(rank) {
-    if (rank === 1) return 'st';
-    if (rank === 2) return 'nd';
-    if (rank === 3) return 'rd';
-    return 'th';
+    if (rank === 1) return "st";
+    if (rank === 2) return "nd";
+    if (rank === 3) return "rd";
+    return "th";
   }
-
 
   // ============================
   // EVENT OPEN MODAL
   // ============================
   openBtn.addEventListener("click", () => {
-    modal.style.display = "flex";
-    loadLeaderboardUI();
+    try {
+      modal.style.display = "flex";
+      loadLeaderboardUI().catch((error) => {
+        // Wrap error as exception but don't break UI
+        const exception = new Error(
+          `Failed to open leaderboard modal: ${error.message}`
+        );
+        console.error("Error loading leaderboard:", exception);
+        // Show error message to user
+        if (tableBody) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align:center;color:red">
+                Error loading leaderboard: ${error.message}
+              </td>
+            </tr>`;
+        }
+      });
+    } catch (error) {
+      // Wrap error as exception but don't break UI
+      const exception = new Error(
+        `Failed to handle leaderboard button click: ${error.message}`
+      );
+      console.error("Error handling leaderboard button:", exception);
+    }
   });
-
 
   // ============================
   // EVENT CLOSE MODAL
@@ -147,5 +168,4 @@
   closeBtn.addEventListener("click", () => {
     modal.style.display = "none";
   });
-
 })();

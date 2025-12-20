@@ -28,11 +28,27 @@ if (typeof window !== "undefined") {
   isSupported()
     .then((supported) => {
       if (supported) {
-        analytics = getAnalytics(app);
+        try {
+          analytics = getAnalytics(app);
+        } catch (error) {
+          // Analytics is optional, wrap error as exception but don't break app
+          throw new Error(`Failed to initialize analytics: ${error.message}`);
+        }
       }
     })
-    .catch(() => {
-      // Silently fail if analytics is not supported
+    .catch((error) => {
+      // Analytics initialization is optional, log but don't throw to prevent app break
+      try {
+        throw new Error(`Analytics initialization error: ${error.message}`);
+      } catch (analyticsError) {
+        // Silently handle analytics errors as they are optional
+        if (typeof console !== "undefined" && console.error) {
+          console.error(
+            "Analytics initialization failed:",
+            analyticsError.message
+          );
+        }
+      }
     });
 }
 
