@@ -72,12 +72,11 @@ async function saveScore(humanScore, computerScore, gameTime, result) {
 // ===============================
 // GET LEADERBOARD (AGGREGATED)
 // ===============================
-async function getLeaderboard(limit = 5) {
+async function getLeaderboard(limit = 7) {
   if (!(await ensureFirebaseReady())) return [];
 
   const { collection, getDocs } = window.firestore;
 
-  // ⛔ NO orderBy, NO limit here
   const snapshot = await getDocs(collection(db, "leaderboard"));
 
   const map = new Map();
@@ -102,10 +101,10 @@ async function getLeaderboard(limit = 5) {
 
     const s = map.get(d.userId);
     if (d.result === "win") {
-      s.totalHumanScore += 3;
+      s.totalHumanScore += 2;
       s.winCount++;
     } else if (d.result === "lose") {
-      s.totalHumanScore -= 2;
+      s.totalHumanScore -= 1;
       s.loseCount++;
     } else {
       // draw
@@ -128,7 +127,6 @@ async function getLeaderboard(limit = 5) {
       userId: u.userId,
       userEmail: u.userEmail,
 
-      // 🔽 JELAS
       totalScore: u.totalHumanScore,   // score berbasis poin
       winCount: u.winCount,
       loseCount: u.loseCount,

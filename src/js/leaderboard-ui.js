@@ -54,7 +54,7 @@
       return;
     }
 
-    const data = await window.leaderboardService.getLeaderboard(5);
+    const data = await window.leaderboardService.getLeaderboard(7);
 
     // ============================
     // HEADER USER LOGIN
