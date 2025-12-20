@@ -209,9 +209,12 @@ afterEach(() => {
     !global.__jestUsingRealTimers
   ) {
     try {
-      const timerCount = jest.getTimerCount();
-      if (timerCount > 0) {
-        jest.runOnlyPendingTimers(); // Clear any pending timers
+      // Check if fake timers are actually enabled before calling getTimerCount
+      if (jest.isMockFunction(setTimeout) || jest.isMockFunction(setInterval)) {
+        const timerCount = jest.getTimerCount();
+        if (timerCount > 0) {
+          jest.runOnlyPendingTimers(); // Clear any pending timers
+        }
       }
     } catch (e) {
       // Ignore error if fake timers check fails
@@ -875,9 +878,14 @@ describe("Error Handling Tests", () => {
       scriptModule.saveScoreToFirestore("X wins!");
       // Wait for promise rejection
       await new Promise((resolve) => setTimeout(resolve, 200));
+      // Error is now wrapped in a new Error with message "Failed to save score to Firestore: ..."
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Gagal menyimpan score:",
-        mockError
+        expect.objectContaining({
+          message: expect.stringContaining(
+            "Failed to save score to Firestore: Firebase error"
+          ),
+        })
       );
     } else {
       expect(true).toBe(true);
